@@ -33,4 +33,4 @@ aggregated %<>% dplyr::collect()
 
 futile.logger::flog.info("Finished collection of aggregated")
 
-aggregated %>% readr::write_csv(arg[2])
+aggregated %>% readr::write_csv(args[2])
