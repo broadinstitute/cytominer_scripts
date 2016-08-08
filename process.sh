@@ -57,7 +57,7 @@ mkdir -p $BACKEND_DIR
 
 BACKEND_FILE=${BACKEND_DIR}/${PLATE_ID}.sqlite
 
-echo time ingest $PLATE_DIR -o sqlite:///${BACKEND_FILE} -c ingest_config.ini
+time ingest $PLATE_DIR -o sqlite:///${BACKEND_FILE} -c ingest_config.ini
 
 BACKEND_FILE_OUT=`readlink -e $BACKEND_FILE`
 
@@ -74,8 +74,12 @@ date
 
 time sqlite3 ${BACKEND_FILE} < indices.sql
 
+date
+
 (>&2 echo "Aggregating ${BACKEND_FILE}")
 
 AGGREGATED_FILE=${BACKEND_DIR}/${PLATE_ID}.csv
 
-echo time Rscript create_profiles.R ${BACKEND_FILE} ${AGGREGATED_FILE}
+time Rscript create_profiles.R ${BACKEND_FILE} ${AGGREGATED_FILE}
+
+date
