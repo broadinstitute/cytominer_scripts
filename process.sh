@@ -1,5 +1,39 @@
 #!/bin/bash
 
+function CHECK_PATH(){
+    STATE=$1
+
+    PATH=$2
+
+    if [[ (STATE == "EXISTS" && ! -a "$PATH") || (STATE == "NOT_EXISTS" && -a "$PATH") ]]; then
+
+	tstamp=`date`
+
+	if [[ STATE == "EXISTS" ]]; then 
+	    MESSAGE="not created / does not exist."
+
+	elif [[ STATE == "NOT_EXISTS" ]]; then
+	    MESSAGE="exists."
+
+	else
+	    (>&2 echo "Unknown state: $STATE")
+
+	    exit
+
+	fi
+
+	(>&2 echo "[$tstamp] ${PATH}" $MESSAGE "Exiting.")
+
+	exit
+    fi
+}
+
+function INFO() {
+    tstamp=`date`
+
+    (>&2 echo "[$tstamp] Ingesting $1")
+}
+
 programname=$0
 
 ingest --help >/dev/null 2>&1 || { echo >&2 "ingest required but not installed. Exiting."; exit 1; }
@@ -41,15 +75,7 @@ done
 
 PLATE_DIR=`readlink -e ../../analysis/${BATCH_ID}/${PLATE_ID}/`
 
-if [[ -z ${PLATE_DIR} ]];
-then
-    (>&2 echo "$PLATE_ID does not exist. Exiting.")
-    exit
-fi
-
-date
-
-(>&2 echo "Ingesting $PLATE_ID")
+CHECK_PATH EXISTS ${PLATE_DIR}
 
 BACKEND_DIR=${TMP_DIR}/${BATCH_ID}/${PLATE_ID}/
 
@@ -57,36 +83,24 @@ mkdir -p $BACKEND_DIR
 
 BACKEND_FILE=${BACKEND_DIR}/${PLATE_ID}.sqlite
 
-if [[ -e $BACKEND_FILE ]];
-then
-    (>&2 echo "${BACKEND_FILE} exists. Exiting.")
-
-    exit
-fi
+CHECK_PATH NOT_EXISTS $BACKEND_FILE
 
 time ingest $PLATE_DIR -o sqlite:///${BACKEND_FILE} -c ingest_config.ini
 
-BACKEND_FILE_OUT=`readlink -e $BACKEND_FILE`
+CHECK_PATH EXISTS $BACKEND_FILE
 
-if [[ -z ${BACKEND_FILE_OUT} ]];
-then
-    (>&2 echo "${BACKEND_FILE} not created. Exiting.")
-
-    exit
-fi
-
-date
-
-(>&2 echo "Indexing ${BACKEND_FILE}")
+INFO "Indexing ${BACKEND_FILE}"
 
 time sqlite3 ${BACKEND_FILE} < indices.sql
 
-date
-
-(>&2 echo "Aggregating ${BACKEND_FILE}")
+INFO "Aggregating ${BACKEND_FILE}"
 
 AGGREGATED_FILE=${BACKEND_DIR}/${PLATE_ID}.csv
 
+CHECK_PATH NOT_EXISTS $AGGREGATED_FILE
+
 time Rscript -e "extends <- methods::extends; source('create_profiles.R')" ${BACKEND_FILE} ${AGGREGATED_FILE}
 
-date
+CHECK_PATH EXISTS $AGGREGATED_FILE
+
+
