@@ -78,4 +78,4 @@ time sqlite3 ${BACKEND_FILE} < indices.sql
 
 AGGREGATED_FILE=${BACKEND_DIR}/${PLATE_ID}.csv
 
-echo time Rscript aggregate_pipeline.R ${BACKEND_FILE} ${AGGREGATED_FILE}
+echo time Rscript create_profiles.R ${BACKEND_FILE} ${AGGREGATED_FILE}
