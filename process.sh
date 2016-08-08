@@ -80,6 +80,6 @@ date
 
 AGGREGATED_FILE=${BACKEND_DIR}/${PLATE_ID}.csv
 
-time Rscript create_profiles.R ${BACKEND_FILE} ${AGGREGATED_FILE}
+time Rscript -e "extends <- methods::extends; source('create_profiles.R')" ${BACKEND_FILE} ${AGGREGATED_FILE}
 
 date
