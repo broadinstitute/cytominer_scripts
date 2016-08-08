@@ -33,4 +33,6 @@ aggregated %<>% dplyr::collect()
 
 futile.logger::flog.info("Finished collection of aggregated")
 
+futile.logger::flog.info(paste0("Writing per-well profiles to ", args[2]))
+
 aggregated %>% readr::write_csv(args[2])
