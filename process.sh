@@ -1,38 +1,52 @@
 #!/bin/bash
 
-function CHECK_PATH(){
+function CHECK_PATH {
+
     STATE=$1
 
-    PATH=$2
+    PATHVAR=$2
 
-    if [[ (STATE == "EXISTS" && ! -a "$PATH") || (STATE == "NOT_EXISTS" && -a "$PATH") ]]; then
-
-	tstamp=`date`
-
-	if [[ STATE == "EXISTS" ]]; then 
-	    MESSAGE="not created / does not exist."
-
-	elif [[ STATE == "NOT_EXISTS" ]]; then
-	    MESSAGE="exists."
-
-	else
-	    (>&2 echo "Unknown state: $STATE")
-
-	    exit
-
-	fi
-
-	(>&2 echo "[$tstamp] ${PATH}" $MESSAGE "Exiting.")
+    if [[ ($STATE != "EXISTS") && ($STATE != "NOT_EXISTS") ]]; then	
+	(>&2 echo "Unknown state: $STATE")
 
 	exit
     fi
-}
 
-function INFO() {
     tstamp=`date`
 
-    (>&2 echo "[$tstamp] Ingesting $1")
+    if [[ $STATE == "EXISTS" && ! -a "$PATHVAR" ]]; then
+	MESSAGE="not created / does not exist."
+
+	(>&2 echo "[$tstamp] ${PATHVAR}" $MESSAGE "Exiting.")
+	    
+	exit
+    fi
+    
+    if [[ $STATE == "NOT_EXISTS" && -a "$PATHVAR" ]]; then
+	    MESSAGE="exists."
+
+	    (>&2 echo "[$tstamp] ${PATHVAR} $MESSAGE")
+
+	    while true; do
+		read -p "Overwrite? (Y/N)" yn
+		case $yn in
+		    [Yy]* ) return 1 ;;
+		    [Nn]* ) return 2 ;;
+		    * ) echo "Please answer yes or no.";;
+		esac
+	    done
+
+    fi
+
+    return 0
 }
+
+function INFO {
+    tstamp=`date`
+
+    (>&2 echo "[$tstamp] $1")
+}
+
 
 programname=$0
 
@@ -85,7 +99,14 @@ BACKEND_FILE=${BACKEND_DIR}/${PLATE_ID}.sqlite
 
 CHECK_PATH NOT_EXISTS $BACKEND_FILE
 
-time ingest $PLATE_DIR -o sqlite:///${BACKEND_FILE} -c ingest_config.ini
+CHECK_RESULT=$?
+
+if [[ $CHECK_RESULT = 0 || $CHECK_RESULT = 1 ]]; then
+    rm -rf ${BACKEND_FILE}
+
+    time ingest $PLATE_DIR -o sqlite:///${BACKEND_FILE} -c ingest_config.ini
+
+fi
 
 CHECK_PATH EXISTS $BACKEND_FILE
 
@@ -99,8 +120,13 @@ AGGREGATED_FILE=${BACKEND_DIR}/${PLATE_ID}.csv
 
 CHECK_PATH NOT_EXISTS $AGGREGATED_FILE
 
-time Rscript -e "extends <- methods::extends; source('create_profiles.R')" ${BACKEND_FILE} ${AGGREGATED_FILE}
+CHECK_RESULT=$?
+
+if [[ $CHECK_RESULT == 0 || $CHECK_RESULT == 1 ]]; then
+    rm -rf $AGGREGATED_FILE
+
+    time Rscript -e "extends <- methods::extends; source('create_profiles.R')" ${BACKEND_FILE} ${AGGREGATED_FILE}
+
+fi
 
 CHECK_PATH EXISTS $AGGREGATED_FILE
-
-
