@@ -57,6 +57,13 @@ mkdir -p $BACKEND_DIR
 
 BACKEND_FILE=${BACKEND_DIR}/${PLATE_ID}.sqlite
 
+if [[ -e $BACKEND_FILE ]];
+then
+    (>&2 echo "${BACKEND_FILE} exists. Exiting.")
+
+    exit
+fi
+
 time ingest $PLATE_DIR -o sqlite:///${BACKEND_FILE} -c ingest_config.ini
 
 BACKEND_FILE_OUT=`readlink -e $BACKEND_FILE`
