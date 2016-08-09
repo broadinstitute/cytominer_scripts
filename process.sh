@@ -196,6 +196,8 @@ BACKEND_ARCHIVE_FILE=${BACKEND_ARCHIVE_DIR}/${PLATE_ID}.sqlite
 
 AGGREGATED_ARCHIVE_FILE=${BACKEND_ARCHIVE_DIR}/${PLATE_ID}.csv
 
+AGGREGATED_WITH_METADATA_ARCHIVE_FILE=${BACKEND_ARCHIVE_DIR}/${PLATE_ID}_augmented.csv
+
 if [[ (! -e $BACKEND_ARCHIVE_FILE) || (! -e $AGGREGATED_ARCHIVE_FILE) ]]; then
 
     CHECK_PATH EXISTS ${PLATE_DIR}
@@ -218,8 +220,9 @@ else
 
 fi
 
+# join with metadata
 
-#METADATA_DIR=`readlink -e ../../metadata/${BATCH_ID}/`
+Rscript -e "extends <- methods::extends; source('join_metadata.R')" $BATCH_ID $PLATE_ID
 
-#CHECK_PATH EXISTS ${METADATA_DIR}
+CHECK_PATH EXISTS $AGGREGATED_WITH_METADATA_ARCHIVE_FILE
 
