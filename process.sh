@@ -9,7 +9,7 @@ function CHECK_PATH {
     if [[ ($STATE != "EXISTS") && ($STATE != "NOT_EXISTS") ]]; then	
 	(>&2 echo "Unknown state: $STATE")
 
-	exit
+	exit 1
     fi
 
     tstamp=`date`
@@ -19,7 +19,7 @@ function CHECK_PATH {
 
 	(>&2 echo "[$tstamp] ${PATHVAR}" $MESSAGE "Exiting.")
 	    
-	exit
+	exit 1
     fi
     
     if [[ $STATE == "NOT_EXISTS" && -a "$PATHVAR" ]]; then
@@ -47,6 +47,100 @@ function INFO {
     (>&2 echo "[$tstamp] $1")
 }
 
+function COMPARE_MD5() {
+
+    A=$1
+
+    B=$2
+
+    MD5_A=`md5sum ${A} | cut -f1 -d' '`
+
+    MD5_B=`md5sum ${B} | cut -f1 -d' '`
+    
+    if [[ $MD5_A != $MD5_B ]]; then
+	
+	tstamp=`date`
+	
+	(>&2 echo "[$tstamp] md5 check failed: ${A} and ${B} are different")
+
+	exit 1
+
+    fi
+}
+
+function CREATE_BACKEND_FILE() {
+
+    INFO "Creating ${BACKEND_FILE}"
+
+    CHECK_PATH NOT_EXISTS $BACKEND_FILE
+
+    CHECK_RESULT=$?
+
+    if [[ $CHECK_RESULT = 0 || $CHECK_RESULT = 1 ]]; then
+	rm -rf ${BACKEND_FILE}
+
+	time ingest $PLATE_DIR -o sqlite:///${BACKEND_FILE} -c ingest_config.ini
+
+    fi
+
+    CHECK_PATH EXISTS $BACKEND_FILE
+
+    INFO "Indexing ${BACKEND_FILE}"
+
+    time sqlite3 ${BACKEND_FILE} < indices.sql
+
+}
+
+function CREATE_AGGREGATED_FILE () {
+
+    INFO "Aggregating ${BACKEND_FILE}"
+
+    CHECK_PATH NOT_EXISTS $AGGREGATED_FILE
+
+    CHECK_RESULT=$?
+
+    if [[ $CHECK_RESULT == 0 || $CHECK_RESULT == 1 ]]; then
+	rm -rf $AGGREGATED_FILE
+
+	time Rscript -e "extends <- methods::extends; source('create_profiles.R')" ${BACKEND_FILE} ${AGGREGATED_FILE}
+
+    fi
+
+    CHECK_PATH EXISTS $AGGREGATED_FILE
+}
+
+function ARCHIVE_BACKEND_FILE () {
+
+    mkdir -p ${BACKEND_ARCHIVE_DIR}
+
+    CHECK_PATH EXISTS ${BACKEND_ARCHIVE_DIR}
+
+    BACKEND_ARCHIVE_DIR=`readlink -e $BACKEND_ARCHIVE_DIR`
+
+    BACKEND_ARCHIVE_FILE=${BACKEND_ARCHIVE_DIR}/${PLATE_ID}.sqlite
+
+    INFO "Moving ${BACKEND_FILE} to ${BACKEND_ARCHIVE_FILE}"
+
+    rsync -a ${BACKEND_FILE} ${BACKEND_ARCHIVE_FILE}
+
+    COMPARE_MD5 ${BACKEND_FILE} ${BACKEND_ARCHIVE_FILE}
+
+    rm ${BACKEND_FILE}
+
+}
+
+function ARCHIVE_AGGREGATED_FILE () {
+
+    AGGREGATED_ARCHIVE_FILE=${BACKEND_ARCHIVE_DIR}/${PLATE_ID}.csv
+
+    INFO "Moving ${AGGREGATED_FILE} to ${AGGREGATED_ARCHIVE_FILE}"
+
+    rsync -a ${AGGREGATED_FILE} ${AGGREGATED_ARCHIVE_FILE}
+
+    COMPARE_MD5 ${AGGREGATED_FILE} ${AGGREGATED_ARCHIVE_FILE}
+
+    rm ${AGGREGATED_FILE}
+}
 
 programname=$0
 
@@ -97,36 +191,19 @@ mkdir -p $BACKEND_DIR
 
 BACKEND_FILE=${BACKEND_DIR}/${PLATE_ID}.sqlite
 
-CHECK_PATH NOT_EXISTS $BACKEND_FILE
-
-CHECK_RESULT=$?
-
-if [[ $CHECK_RESULT = 0 || $CHECK_RESULT = 1 ]]; then
-    rm -rf ${BACKEND_FILE}
-
-    time ingest $PLATE_DIR -o sqlite:///${BACKEND_FILE} -c ingest_config.ini
-
-fi
-
-CHECK_PATH EXISTS $BACKEND_FILE
-
-INFO "Indexing ${BACKEND_FILE}"
-
-time sqlite3 ${BACKEND_FILE} < indices.sql
-
-INFO "Aggregating ${BACKEND_FILE}"
+CREATE_BACKEND_FILE
 
 AGGREGATED_FILE=${BACKEND_DIR}/${PLATE_ID}.csv
 
-CHECK_PATH NOT_EXISTS $AGGREGATED_FILE
+CREATE_AGGREGATED_FILE
 
-CHECK_RESULT=$?
+BACKEND_ARCHIVE_DIR="../../backend/${BATCH_ID}/${PLATE_ID}/"
 
-if [[ $CHECK_RESULT == 0 || $CHECK_RESULT == 1 ]]; then
-    rm -rf $AGGREGATED_FILE
+ARCHIVE_BACKEND_FILE
 
-    time Rscript -e "extends <- methods::extends; source('create_profiles.R')" ${BACKEND_FILE} ${AGGREGATED_FILE}
+ARCHIVE_AGGREGATED_FILE
 
-fi
+#METADATA_DIR=`readlink -e ../../metadata/${BATCH_ID}/`
 
-CHECK_PATH EXISTS $AGGREGATED_FILE
+#CHECK_PATH EXISTS ${METADATA_DIR}
+
