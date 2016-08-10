@@ -27,12 +27,22 @@ aggregated <-
     operation = "mean"
   )
 
-futile.logger::flog.info("Started collection of aggregated")
+futile.logger::flog.info("Started checking aggregated")
+
+plate_count <- aggregated %>% dplyr::count(Image_Metadata_Plate) %>% dplyr::collect() 
+
+print(knitr::kable(plate_count))
+
+testthat::expect_equal(plate_count %>% magrittr::extract2("n"), 384)
+
+futile.logger::flog.info("Finished checking aggregated")
+
+futile.logger::flog.info("Started collecting aggregated")
 
 aggregated %<>% dplyr::collect()
 
-futile.logger::flog.info("Finished collection of aggregated")
+futile.logger::flog.info("Finished collecting aggregated")
 
-futile.logger::flog.info(paste0("Writing per-well profiles to ", args[2]))
+futile.logger::flog.info(paste0("Writing aggregated to ", args[2]))
 
 aggregated %>% readr::write_csv(args[2])
