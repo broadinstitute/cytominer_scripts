@@ -7,6 +7,16 @@ set.seed(42)
 CYTOMINR_DIR <- "../../software/cytominr_old/"
 devtools::load_all(CYTOMINR_DIR)
 
+args = commandArgs(trailingOnly=TRUE)
+
+#cpd_plate_map <- args[1]
+cpd_plate_map <- "C-7161-01-LM6-001"
+
+plates.dir <- 
+  readr::read_csv("../../metadata/2016_04_01_a549_48hr_batch1/barcode_platemap.csv") %>% 
+  filter(Compound_Plate_Map_Name == cpd_plate_map) %>% 
+  magrittr::extract2("Assay_Plate_Barcode")
+
 base.dir <- "../../backend/2016_04_01_a549_48hr_batch1"
 norm.center <- "mean"
 norm.scale <- "sd"
@@ -16,14 +26,18 @@ num.null.samples <- 1000
 findCorr.cut.off <- 0.90
 apply.med.polish <- F
 
-## plate directories to include in the analysis
-plates.dir <- c("SQ00015116", "SQ00015117", "SQ00015118")
-
 ## reading the profiles in the plates + meta data and put them together 
 Px.list <- c()
 for (plate.dir in plates.dir) {
-  Pxi <- readr::read_csv(sprintf("%s/%s/%s_augmented.csv", base.dir, plate.dir, plate.dir))  
-  Px.list <- c(Px.list, list(Pxi))
+  augcsv <- sprintf("%s/%s/%s_augmented.csv", base.dir, plate.dir, plate.dir)
+  if(file.exists(augcsv)) {
+    futile.logger::flog.info(paste("Reading: ", plate.dir))
+    
+    Pxi <- readr::read_csv(augcsv)  
+    Px.list <- c(Px.list, list(Pxi))
+  } else {
+    futile.logger::flog.info(paste("Doesn't exist;", plate.dir))
+  }
 }
 Px <- do.call(rbind, Px.list)
 Px$Metadata_broad_sample <- lapply(Px$Metadata_broad_sample, function(x) ifelse(is.na(x), "DMSO", x)) %>% unlist
