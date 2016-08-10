@@ -1,0 +1,35 @@
+library(dplyr)
+library(magrittr)
+
+#batch_id <- args[1] #"2016_04_01_a549_48hr_batch1"
+batch_id <- "2016_04_01_a549_48hr_batch1"
+
+metadata_dir <- paste("../..", "metadata", batch_id, sep = "/")
+
+backend_dir <- paste("../..", "backend", batch_id, sep = "/")
+
+per_well_csv <- 
+  tibble::data_frame(flist = 
+                       list.files(backend_dir, 
+                                  pattern = "*augmented.csv", 
+                                  recursive = T, full.names = T)
+  )
+
+per_well_csv
+
+per_well_csv %<>% 
+  rowwise() %>%
+  mutate(Assay_Plate_Barcode = 
+           stringr::str_split(basename(flist), "_")[[1]][1]
+         ) %>%
+  ungroup()
+
+per_well_csv %<>% inner_join(
+  readr::read_csv(paste(metadata_dir, "barcode_platemap.csv", sep = "/")) %>%
+    select(Compound_Plate_Map_Name, Assay_Plate_Barcode)
+)
+
+per_well_csv %>% count(Compound_Plate_Map_Name)
+
+df <- lapply(per_well_csv$flist %>% normalizePath(), readr::read_csv) %>% bind_rows()
+
