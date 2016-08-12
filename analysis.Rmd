@@ -37,6 +37,11 @@ per_well_csv %>%
 
 df <- lapply(per_well_csv$flist %>% normalizePath(), readr::read_csv) %>% bind_rows()
 
+df %<>%
+  mutate(Metadata_broad_sample = ifelse(is.na(Metadata_broad_sample), "control", "trt")) %>%
+  mutate(Metadata_mg_per_ml = ifelse(Metadata_broad_sample =="control", 0, Metadata_mg_per_ml)) %>%
+  mutate(Metadata_mmoles_per_liter = ifelse(Metadata_broad_sample =="control", 0, Metadata_mmoles_per_liter)) 
+  
 feature_cols <-
   colnames(df) %>%
   stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
@@ -48,5 +53,85 @@ metadata_cols <-
 df %>% 
   count(Metadata_Compound_Plate_Map_Name, Metadata_Plate) %>%
   knitr::kable()
+```
+
+
+```{r}
+selected <-
+  cytominr::select(
+    population = df,
+    variables = feature_cols,
+    sample = df,
+    operation = "variance_threshold"
+  ) %>%
+  dplyr::collect()
+
+feature_cols <-
+  colnames(selected) %>%
+  stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
+```
+
+```{r}
+selected <-
+  cytominr::select(
+    population = selected,
+    variables = feature_cols,
+    sample = selected,
+    operation = "correlation_threshold"
+  ) %>%
+  dplyr::collect()
+feature_cols <-
+  colnames(selected) %>%
+  stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
+```
+
+```{r}
+
+normalized <-
+  cytominr::normalize(
+    population = selected,
+    variables = feature_cols,
+    strata =  c("Metadata_Plate"),
+    sample = selected %>% dplyr::filter(Metadata_broad_sample == "control")
+  )
+```
+
+
+```{r}
+
+grouping_cols <- c("Metadata_Plate", "Metadata_Well")
+feature_col <- "Cells_Intensity_MeanIntensity_DNA"
+
+#f_rep_cor <- function(df, feature_cols) {
+  
+
+f_rep_cor_1 <- function(df1) {
+ cmat <- 
+ df1 %>%
+   arrange_(.dots = grouping_cols) %>% 
+   select_(.dots = c(grouping_cols, feature_col)) %>% 
+   tidyr::spread_("Metadata_Plate", feature_col) %>% 
+   dplyr::select(-Metadata_Well) %>%
+   cor()
+
+ median(cmat[upper.tri(cmat)])
+}
+
+df <- selected %>% 
+    filter(Metadata_broad_sample == "trt")
+
+df %>%
+  split(.$Metadata_Compound_Plate_Map_Name) %>%
+  purrr::map_df(f_rep_cor_1)
+  
+  # sapply(feature_cols, function () {
+  # }
+  
+#}
+
+
+selected %>% 
+      filter(Metadata_broad_sample == "trt")
+  
 ```
 
