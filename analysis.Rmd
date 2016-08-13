@@ -3,7 +3,7 @@ library(dplyr)
 library(magrittr)
 ```
 
-```{r load_all_data}
+```{r load_data}
 
 #batch_id <- args[1] #"2016_04_01_a549_48hr_batch1"
 batch_id <- "2016_04_01_a549_48hr_batch1"
@@ -56,7 +56,7 @@ df %>%
 ```
 
 
-```{r}
+```{r variance_threshold}
 selected <-
   cytominr::select(
     population = df,
@@ -71,7 +71,8 @@ feature_cols <-
   stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
 ```
 
-```{r}
+
+```{r correlation_threshold, eval=FALSE}
 selected <-
   cytominr::select(
     population = selected,
@@ -85,7 +86,8 @@ feature_cols <-
   stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
 ```
 
-```{r}
+
+```{r normalize, eval=FALSE}
 
 normalized <-
   cytominr::normalize(
@@ -97,41 +99,40 @@ normalized <-
 ```
 
 
-```{r}
+```{r feature_replicate_scores}
 
-grouping_cols <- c("Metadata_Plate", "Metadata_Well")
-feature_col <- "Cells_Intensity_MeanIntensity_DNA"
+feature_replicate_correlation <- function(df, 
+                                          grouping_cols, 
+                                          feature_col, 
+                                          key_col) {
 
-#f_rep_cor <- function(df, feature_cols) {
+  nonkey_grouping_cols <- setdiff(grouping_cols, key_col)
   
-
-f_rep_cor_1 <- function(df1) {
- cmat <- 
- df1 %>%
-   arrange_(.dots = grouping_cols) %>% 
-   select_(.dots = c(grouping_cols, feature_col)) %>% 
-   tidyr::spread_("Metadata_Plate", feature_col) %>% 
-   dplyr::select(-Metadata_Well) %>%
-   cor()
-
- median(cmat[upper.tri(cmat)])
+  correlation_matrix <- 
+    df %>%
+    arrange_(.dots = grouping_cols) %>%
+    select_(.dots = c(grouping_cols, feature_col)) %>% 
+    tidyr::spread_(key_col, feature_col) %>% 
+    dplyr::select_(~-dplyr::one_of(nonkey_grouping_cols)) %>%
+    cor()
+  
+  futile.logger::flog.info(paste("correlation matrix headers", 
+                                 paste(colnames(correlation_matrix), collapse = ","), 
+                                 sep = ":"))
+  
+  median(correlation_matrix[upper.tri(correlation_matrix)])
 }
 
-df <- selected %>% 
-    filter(Metadata_broad_sample == "trt")
+df <- 
+  selected %>% 
+  filter(Metadata_broad_sample == "trt")
 
 df %>%
   split(.$Metadata_Compound_Plate_Map_Name) %>%
-  purrr::map_df(f_rep_cor_1)
-  
-  # sapply(feature_cols, function () {
-  # }
-  
-#}
+  purrr::map_df(feature_replicate_correlation, 
+                grouping_cols = c("Metadata_Plate", "Metadata_Well"),
+                feature_col = "Cells_Intensity_MeanIntensity_DNA",
+                key_col = "Metadata_Plate")
 
-
-selected %>% 
-      filter(Metadata_broad_sample == "trt")
-  
 ```
 
