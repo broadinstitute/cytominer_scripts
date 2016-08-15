@@ -100,7 +100,7 @@ normalized <-
 ```
 
 
-```{r feature_replicate_scores}
+```{r feature_replicate_scores, eval=FALSE}
 library(foreach)
 library(doMC)
 doMC::registerDoMC()
@@ -139,14 +139,14 @@ calculate_feature_replicate_correlations <-
     } %>%
       tidyr::gather_(key_col, "pearson", setdiff(names(.), "feature_col")) %>% 
       dplyr::group_by(feature_col) %>% 
-      dplyr::summarize_at("pearson", dplyr::funs(median))
+      dplyr::summarize_at("pearson", dplyr::funs(median, min, max))
 }
 
 feature_replicate_correlations <-
   selected %>%
   filter(Metadata_broad_sample == "trt") %>%
   calculate_feature_replicate_correlations(
-    feature_cols = feature_cols[1:10],
+    feature_cols = feature_cols,
     split_col = "Metadata_Compound_Plate_Map_Name",
     grouping_cols = c("Metadata_Plate", "Metadata_Well"),
     key_col = "Metadata_Plate")
@@ -154,5 +154,27 @@ feature_replicate_correlations <-
 feature_replicate_correlations %>% 
   knitr::kable()
 
+feature_replicate_correlations  %>% readr::write_csv("feature_replicate_correlations.csv")
+
+```
+
+
+```{r filter_based_on_feature_replicate_correlations}
+
+if(!exists("feature_replicate_correlations") & file.exists("feature_replicate_correlations.csv")) {
+  futile.logger::flog.info("Reading feature_replicate_correlations from file.")
+  feature_replicate_correlations <- readr::read_csv("feature_replicate_correlations.csv")
+}
+
+selected %<>% 
+  dplyr::select_(.dots = setdiff(x = colnames(selected), 
+        y = feature_replicate_correlations %>% 
+          filter(min < 0.6) %>% 
+          magrittr::extract2("feature_col"))
+        )
+
+feature_cols <-
+  colnames(selected) %>%
+  stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
 ```
 
