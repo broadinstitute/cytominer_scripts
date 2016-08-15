@@ -1,9 +1,10 @@
-```{r}
+```{r load_libraries}
 library(dplyr)
 library(magrittr)
 ```
 
-```{r load_data}
+
+```{r load_data, cache=TRUE}
 
 #batch_id <- args[1] #"2016_04_01_a549_48hr_batch1"
 batch_id <- "2016_04_01_a549_48hr_batch1"
@@ -100,39 +101,58 @@ normalized <-
 
 
 ```{r feature_replicate_scores}
+library(foreach)
+library(doMC)
+doMC::registerDoMC()
 
-feature_replicate_correlation <- function(df, 
-                                          grouping_cols, 
-                                          feature_col, 
-                                          key_col) {
+calculate_feature_replicate_correlation <- function(df, 
+                                                    feature_col, 
+                                                    grouping_cols, 
+                                                    key_col) {
 
   nonkey_grouping_cols <- setdiff(grouping_cols, key_col)
   
   correlation_matrix <- 
     df %>%
-    arrange_(.dots = grouping_cols) %>%
-    select_(.dots = c(grouping_cols, feature_col)) %>% 
+    dplyr::arrange_(.dots = grouping_cols) %>%
+    dplyr::select_(.dots = c(grouping_cols, feature_col)) %>% 
     tidyr::spread_(key_col, feature_col) %>% 
     dplyr::select_(~-dplyr::one_of(nonkey_grouping_cols)) %>%
     cor()
   
-  futile.logger::flog.info(paste("correlation matrix headers", 
-                                 paste(colnames(correlation_matrix), collapse = ","), 
-                                 sep = ":"))
-  
   median(correlation_matrix[upper.tri(correlation_matrix)])
 }
 
-df <- 
-  selected %>% 
-  filter(Metadata_broad_sample == "trt")
+calculate_feature_replicate_correlations <- 
+  function(df, feature_cols, grouping_cols, key_col, split_col) {
+  
+  foreach::foreach(feature_col = feature_cols, .combine = rbind) %dopar%
+    {
+      
+      df %>%
+        split(.[split_col]) %>%
+        purrr::map_df(calculate_feature_replicate_correlation, 
+                      feature_col = feature_col,
+                      grouping_cols = grouping_cols,
+                      key_col = key_col) %>% 
+        dplyr::mutate(feature_col = feature_col)
+    } %>%
+      tidyr::gather_(key_col, "pearson", setdiff(names(.), "feature_col")) %>% 
+      dplyr::group_by(feature_col) %>% 
+      dplyr::summarize_at("pearson", dplyr::funs(median))
+}
 
-df %>%
-  split(.$Metadata_Compound_Plate_Map_Name) %>%
-  purrr::map_df(feature_replicate_correlation, 
-                grouping_cols = c("Metadata_Plate", "Metadata_Well"),
-                feature_col = "Cells_Intensity_MeanIntensity_DNA",
-                key_col = "Metadata_Plate")
+feature_replicate_correlations <-
+  selected %>%
+  filter(Metadata_broad_sample == "trt") %>%
+  calculate_feature_replicate_correlations(
+    feature_cols = feature_cols[1:10],
+    split_col = "Metadata_Compound_Plate_Map_Name",
+    grouping_cols = c("Metadata_Plate", "Metadata_Well"),
+    key_col = "Metadata_Plate")
+
+feature_replicate_correlations %>% 
+  knitr::kable()
 
 ```
 
