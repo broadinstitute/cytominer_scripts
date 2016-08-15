@@ -58,7 +58,7 @@ df %>%
 
 
 ```{r variance_threshold}
-selected <-
+df <-
   cytominr::select(
     population = df,
     variables = feature_cols,
@@ -68,44 +68,17 @@ selected <-
   dplyr::collect()
 
 feature_cols <-
-  colnames(selected) %>%
+  colnames(df) %>%
   stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
 ```
 
 
-```{r correlation_threshold, eval=FALSE}
-selected <-
-  cytominr::select(
-    population = selected,
-    variables = feature_cols,
-    sample = selected,
-    operation = "correlation_threshold"
-  ) %>%
-  dplyr::collect()
-feature_cols <-
-  colnames(selected) %>%
-  stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
-```
-
-
-```{r normalize, eval=FALSE}
-
-normalized <-
-  cytominr::normalize(
-    population = selected,
-    variables = feature_cols,
-    strata =  c("Metadata_Plate"),
-    sample = selected %>% dplyr::filter(Metadata_broad_sample == "control")
-  )
-```
-
-
-```{r feature_replicate_scores, eval=FALSE}
+```{r feature_replicate_scores}
 library(foreach)
 library(doMC)
 doMC::registerDoMC()
 
-calculate_feature_replicate_correlation <- function(df, 
+calculate_feature_replicate_correlation <- function(data, 
                                                     feature_col, 
                                                     grouping_cols, 
                                                     key_col) {
@@ -113,7 +86,7 @@ calculate_feature_replicate_correlation <- function(df,
   nonkey_grouping_cols <- setdiff(grouping_cols, key_col)
   
   correlation_matrix <- 
-    df %>%
+    data %>%
     dplyr::arrange_(.dots = grouping_cols) %>%
     dplyr::select_(.dots = c(grouping_cols, feature_col)) %>% 
     tidyr::spread_(key_col, feature_col) %>% 
@@ -124,12 +97,12 @@ calculate_feature_replicate_correlation <- function(df,
 }
 
 calculate_feature_replicate_correlations <- 
-  function(df, feature_cols, grouping_cols, key_col, split_col) {
+  function(data, feature_cols, grouping_cols, key_col, split_col) {
   
   foreach::foreach(feature_col = feature_cols, .combine = rbind) %dopar%
     {
       
-      df %>%
+      data %>%
         split(.[split_col]) %>%
         purrr::map_df(calculate_feature_replicate_correlation, 
                       feature_col = feature_col,
@@ -142,8 +115,12 @@ calculate_feature_replicate_correlations <-
       dplyr::summarize_at("pearson", dplyr::funs(median, min, max))
 }
 
+```
+
+
+```{r feature_replicate_scores_calculate, eval=FALSE}
 feature_replicate_correlations <-
-  selected %>%
+  df %>%
   filter(Metadata_broad_sample == "trt") %>%
   calculate_feature_replicate_correlations(
     feature_cols = feature_cols,
@@ -154,7 +131,7 @@ feature_replicate_correlations <-
 feature_replicate_correlations %>% 
   knitr::kable()
 
-feature_replicate_correlations  %>% readr::write_csv("feature_replicate_correlations.csv")
+#feature_replicate_correlations  %>% readr::write_csv("feature_replicate_correlations.csv")
 
 ```
 
@@ -166,15 +143,57 @@ if(!exists("feature_replicate_correlations") & file.exists("feature_replicate_co
   feature_replicate_correlations <- readr::read_csv("feature_replicate_correlations.csv")
 }
 
-selected %<>% 
-  dplyr::select_(.dots = setdiff(x = colnames(selected), 
+df %<>% 
+  dplyr::select_(.dots = setdiff(x = colnames(df), 
         y = feature_replicate_correlations %>% 
           filter(min < 0.6) %>% 
           magrittr::extract2("feature_col"))
         )
 
 feature_cols <-
-  colnames(selected) %>%
+  colnames(df) %>%
   stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
 ```
 
+
+```{r correlation_threshold}
+df <-
+  cytominr::select(
+    population = df,
+    variables = feature_cols,
+    sample = df,
+    operation = "correlation_threshold"
+  ) %>%
+  dplyr::collect()
+
+feature_cols <-
+  colnames(df) %>%
+  stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
+```
+
+
+```{r normalize}
+
+futile.logger::flog.threshold(futile.logger::DEBUG)
+
+normalized <-
+  cytominr::normalize(
+    population = df,
+    variables = feature_cols,
+    strata =  c("Metadata_Plate"),
+    sample = df %>% dplyr::filter(Metadata_broad_sample == "control")
+  )
+
+# Check if data was normalized correctly by checking if mean of control wells
+# is zero
+normalized %>%
+  dplyr::filter(Metadata_broad_sample == "control") %>%
+  dplyr::group_by(Metadata_Plate) %>%
+  dplyr::summarise_at(feature_cols, mean) %>%
+  tidyr::gather(feature_col, error, -Metadata_Plate) %>%
+  dplyr::group_by(feature_col) %>%
+  dplyr::summarize(error = max(error)) %>%
+  dplyr::summarize(max_error = max(error)) %>%
+  knitr::kable()
+
+```
