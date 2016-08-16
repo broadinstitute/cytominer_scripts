@@ -202,7 +202,9 @@ normalized %>%
 ```{r write_gctx}
 source("GENE.E.R")
 
-write_gctx <- function(df, fname) {
+write_gct <- function(df, fname) {
+  stopifnot(stringr::str_detect(fname, "gctx$") | stringr::str_detect(fname, "gct$"))
+  
   if(file.exists(fname)) {
     file.remove(fname)
   }
@@ -217,14 +219,39 @@ write_gctx <- function(df, fname) {
   
   H5close()
   
-  write.gctx(mdat = df %>% dplyr::select_(.dots = feature_cols) %>% 
-               data.matrix() %>% t(), 
-             column.annotations = df %>% 
-               dplyr::select(matches("^id$|^Metadata_")), 
-             file = fname)
+  mdat <- df %>% dplyr::select_(.dots = feature_cols) %>% data.matrix() %>% t()
+  
+  column.annotations <- df %>% dplyr::select(matches("^id$|^Metadata_"))
+  
+  if (stringr::str_detect(fname, "gctx$")) {
+    write.gctx(mdat = mdat, column.annotations = column.annotations,  file = fname)
+    
+  } else {
+    n_readouts <- nrow(mdat)
+    
+    n_samples <- ncol(mdat)
+    
+    n_row_annot <- 0
+    
+    n_col_annot <- ncol(column.annotations) - 1 # id is not counted
+    
+    f <- file(fname, "w")
+    
+    writeLines("#1.3", con = f)
+    
+    writeLines(sprintf("%d\t%d\t%d\t%d", n_readouts, n_samples, n_row_annot, n_col_annot), con = f)
+    
+    close(f)
+
+    readr::write_tsv(x = column.annotations %>% t() %>% as.data.frame() %>% 
+                       tibble::rownames_to_column() %>% 
+                       dplyr::mutate(rowname = stringr::str_replace(rowname, "Metadata_", "")), 
+                     path = fname, append = TRUE, col_names = FALSE)
+
+    readr::write_tsv(x = mdat %>% as.data.frame() %>% tibble::rownames_to_column() , path = fname, append = TRUE)
+  }
     
 }
-
 
 ```
 
@@ -249,7 +276,7 @@ normalized %>%
 
     futile.logger::flog.info(csv_fname)
     
-    gct_fname <- stringr::str_replace(csv_fname, "csv$", "gctx")
+    gct_fname <- stringr::str_replace(csv_fname, "csv$", "gct")
 
     futile.logger::flog.info(gct_fname)
 
@@ -258,7 +285,7 @@ normalized %>%
       readr::write_csv(csv_fname)
 
     data %>%
-      write_gctx(gct_fname)
+      write_gct(gct_fname)
 
   }) %>%
   invisible()
