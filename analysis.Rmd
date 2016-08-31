@@ -200,15 +200,15 @@ normalized %>%
 
 
 ```{r write_gctx}
-source("GENE.E.R")
 
 write_gct <- function(df, fname) {
-  stopifnot(stringr::str_detect(fname, "gctx$") | stringr::str_detect(fname, "gct$"))
+  stopifnot(stringr::str_detect(fname, "gct$"))
   
   if(file.exists(fname)) {
     file.remove(fname)
   }
   
+  # id is hash of metadata columns
   df %<>% 
     tidyr::unite("xid", matches("Metadata_"), remove = F) %>% 
     dplyr::rowwise() %>% 
@@ -222,75 +222,72 @@ write_gct <- function(df, fname) {
     colnames(df) %>%
     stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
   
-  H5close()
+  measurements <- 
+    df %>% 
+    dplyr::select_(.dots = feature_cols) %>% 
+    data.matrix() %>% 
+    t()
   
-  mdat <- df %>% dplyr::select_(.dots = feature_cols) %>% data.matrix() %>% t()
+  column_annotations <- 
+    df %>% 
+    dplyr::select(matches("^id$|^Metadata_"))
   
-  column.annotations <- df %>% dplyr::select(matches("^id$|^Metadata_"))
-  
-  row.annotations <- 
-    tibble::data_frame(cp_feature_name = row.names(mdat)) %>%
+  row_annotations <- 
+    tibble::data_frame(cp_feature_name = row.names(measurements)) %>%
     tidyr::separate(col = "cp_feature_name", 
                     into = c("compartment", "feature_group", "feature_name"), 
                     sep = "_", extra = "merge"
                     )
+
+  n_readouts <- nrow(measurements)
   
-  if (stringr::str_detect(fname, "gctx$")) {
-    write.gctx(mdat = mdat, 
-               column.annotations = column.annotations,  
-               row.annotations = row.annotations,  
-               file = fname)
-    
-  } else {
-    n_readouts <- nrow(mdat)
-    
-    n_samples <- ncol(mdat)
-    
-    n_row_annot <- ncol(row.annotations)
+  n_samples <- ncol(measurements)
+  
+  n_row_annot <- ncol(row_annotations)
 
-    n_col_annot <- ncol(column.annotations) - 1 # id is not counted
-    
-    f <- file(fname, "w")
-    
-    writeLines("#1.3", con = f)
-    
-    writeLines(sprintf("%d\t%d\t%d\t%d", n_readouts, n_samples, n_row_annot, n_col_annot), con = f)
-    
-    close(f)
+  n_col_annot <- ncol(column_annotations) - 1 # id is not counted
+  
+  f <- file(fname, "w")
+  
+  writeLines("#1.3", con = f)
+  
+  writeLines(sprintf("%d\t%d\t%d\t%d", n_readouts, n_samples, n_row_annot, n_col_annot), con = f)
+  
+  close(f)
 
-    column.annotations.df <- 
-      column.annotations %>% 
-      t() %>% 
-      as.data.frame() %>% 
-      tibble::rownames_to_column() %>% 
-      dplyr::mutate(rowname = stringr::str_replace(rowname, "Metadata_", ""))
-    
-    filler <- row.annotations %>% slice(0)
-    filler[1,] <- colnames(filler)
-    filler[2:nrow(column.annotations.df),] <- NA
-    
-    column.annotations.df <- 
-      dplyr::bind_cols(column.annotations.df[1],
-                       filler,
-                       column.annotations.df[2:ncol(column.annotations.df)]
-                       )
-    
-    mdat.df <- 
-      mdat %>% 
-      as.data.frame() %>% 
-      tibble::rownames_to_column()
-    
-    mdat.df <- 
-      dplyr::bind_cols(mdat.df[1], 
-                       row.annotations, 
-                       mdat.df[2:ncol(mdat.df)]
-                       )
-    
-    readr::write_tsv(x = column.annotations.df, 
-                     path = fname, append = TRUE, col_names = FALSE)
+  column_annotations_df <- 
+    column_annotations %>% 
+    t() %>% 
+    as.data.frame() %>% 
+    tibble::rownames_to_column() %>% 
+    dplyr::mutate(rowname = stringr::str_replace(rowname, "Metadata_", ""))
+  
+  filler <- row_annotations %>% slice(0)
+  filler[1,] <- colnames(filler)
+  filler[2:nrow(column_annotations_df),] <- NA
+  
+  column_annotations_df <- 
+    dplyr::bind_cols(column_annotations_df[1],
+                     filler,
+                     column_annotations_df[2:ncol(column_annotations_df)]
+                     )
+  
+  measurements_df <- 
+    measurements %>% 
+    as.data.frame() %>% 
+    tibble::rownames_to_column()
+  
+  measurements_df <- 
+    dplyr::bind_cols(measurements_df[1], 
+                     row_annotations, 
+                     measurements_df[2:ncol(measurements_df)]
+                     )
+  
+  readr::write_tsv(x = column_annotations_df, 
+                   path = fname, append = TRUE, col_names = FALSE)
 
-    readr::write_tsv(x = mdat.df, path = fname, append = TRUE)
-  }
+  readr::write_tsv(x = measurements_df, path = fname, append = TRUE)
+
     
 }
 
