@@ -246,8 +246,8 @@ write_gct <- function(df, fname) {
     
     n_samples <- ncol(mdat)
     
-    n_row_annot <- 0
-    
+    n_row_annot <- ncol(row.annotations)
+
     n_col_annot <- ncol(column.annotations) - 1 # id is not counted
     
     f <- file(fname, "w")
@@ -258,12 +258,38 @@ write_gct <- function(df, fname) {
     
     close(f)
 
-    readr::write_tsv(x = column.annotations %>% t() %>% as.data.frame() %>% 
-                       tibble::rownames_to_column() %>% 
-                       dplyr::mutate(rowname = stringr::str_replace(rowname, "Metadata_", "")), 
+    column.annotations.df <- 
+      column.annotations %>% 
+      t() %>% 
+      as.data.frame() %>% 
+      tibble::rownames_to_column() %>% 
+      dplyr::mutate(rowname = stringr::str_replace(rowname, "Metadata_", ""))
+    
+    filler <- row.annotations %>% slice(0)
+    filler[1,] <- colnames(filler)
+    filler[2:nrow(column.annotations.df),] <- NA
+    
+    column.annotations.df <- 
+      dplyr::bind_cols(column.annotations.df[1],
+                       filler,
+                       column.annotations.df[2:ncol(column.annotations.df)]
+                       )
+    
+    mdat.df <- 
+      mdat %>% 
+      as.data.frame() %>% 
+      tibble::rownames_to_column()
+    
+    mdat.df <- 
+      dplyr::bind_cols(mdat.df[1], 
+                       row.annotations, 
+                       mdat.df[2:ncol(mdat.df)]
+                       )
+    
+    readr::write_tsv(x = column.annotations.df, 
                      path = fname, append = TRUE, col_names = FALSE)
 
-    readr::write_tsv(x = mdat %>% as.data.frame() %>% tibble::rownames_to_column() , path = fname, append = TRUE)
+    readr::write_tsv(x = mdat.df, path = fname, append = TRUE)
   }
     
 }
@@ -338,4 +364,6 @@ augmented %>% readr::write_csv(paste0(backend_dir, "/", batch_id, ".csv"))
 augmented %>% write_gct(paste0(backend_dir, "/", batch_id, ".gct"))
   
 ```
+
+
 
