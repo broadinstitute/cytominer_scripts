@@ -228,8 +228,18 @@ write_gct <- function(df, fname) {
   
   column.annotations <- df %>% dplyr::select(matches("^id$|^Metadata_"))
   
+  row.annotations <- 
+    tibble::data_frame(cp_feature_name = row.names(mdat)) %>%
+    tidyr::separate(col = "cp_feature_name", 
+                    into = c("compartment", "feature_group", "feature_name"), 
+                    sep = "_", extra = "merge"
+                    )
+  
   if (stringr::str_detect(fname, "gctx$")) {
-    write.gctx(mdat = mdat, column.annotations = column.annotations,  file = fname)
+    write.gctx(mdat = mdat, 
+               column.annotations = column.annotations,  
+               row.annotations = row.annotations,  
+               file = fname)
     
   } else {
     n_readouts <- nrow(mdat)
