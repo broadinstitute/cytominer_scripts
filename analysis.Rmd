@@ -211,6 +211,7 @@ write_gct <- function(df, fname) {
   
   df %<>% tidyr::unite(id, Metadata_Plate, Metadata_Well, remove = FALSE)
   
+  # write.gctx does not handle Date 
   df %<>% dplyr::mutate_if(is.numeric.Date, as.character)
   
   feature_cols <-
