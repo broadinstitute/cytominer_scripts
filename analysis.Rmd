@@ -199,7 +199,7 @@ normalized %>%
 ```
 
 
-```{r write_gctx}
+```{r write_gct}
 
 write_gct <- function(df, fname) {
   stopifnot(stringr::str_detect(fname, "gct$"))
@@ -239,22 +239,6 @@ write_gct <- function(df, fname) {
                     sep = "_", extra = "merge"
                     )
 
-  n_readouts <- nrow(measurements)
-  
-  n_samples <- ncol(measurements)
-  
-  n_row_annot <- ncol(row_annotations)
-
-  n_col_annot <- ncol(column_annotations) - 1 # id is not counted
-  
-  f <- file(fname, "w")
-  
-  writeLines("#1.3", con = f)
-  
-  writeLines(sprintf("%d\t%d\t%d\t%d", n_readouts, n_samples, n_row_annot, n_col_annot), con = f)
-  
-  close(f)
-
   column_annotations_df <- 
     column_annotations %>% 
     t() %>% 
@@ -282,13 +266,23 @@ write_gct <- function(df, fname) {
                      row_annotations, 
                      measurements_df[2:ncol(measurements_df)]
                      )
+
+  f <- file(fname, "w")
   
-  readr::write_tsv(x = column_annotations_df, 
-                   path = fname, append = TRUE, col_names = FALSE)
+  writeLines("#1.3", con = f)
+  
+  writeLines(sprintf("%d\t%d\t%d\t%d", 
+                     nrow(measurements), 
+                     ncol(measurements), 
+                     ncol(row_annotations), 
+                     ncol(column_annotations) - 1), 
+             con = f)
+  
+  close(f)
+
+  readr::write_tsv(x = column_annotations_df, path = fname, append = TRUE, col_names = FALSE)
 
   readr::write_tsv(x = measurements_df, path = fname, append = TRUE)
-
-    
 }
 
 ```
