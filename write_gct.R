@@ -16,9 +16,9 @@ write_gct <- function(x, path) {
   
   # id is hash of metadata columns
   x %<>% 
-    tidyr::unite("xid", matches("Metadata_"), remove = F) %>% 
+    tidyr::unite("id", matches("Metadata_"), remove = F) %>% 
     dplyr::rowwise() %>% 
-    dplyr::mutate(xid = digest::digest(xid)) %>% 
+    dplyr::mutate(id = digest::digest(id)) %>% 
     dplyr::ungroup() 
   
   # write.gctx does not handle Date 
