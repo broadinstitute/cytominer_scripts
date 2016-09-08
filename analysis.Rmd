@@ -257,7 +257,9 @@ collapsed <-
                   Metadata_MoAs) %>% 
   dplyr::summarise_at(.cols = feature_cols, .funs = mean) %>%
   dplyr::ungroup() %>% 
-  dplyr::rename(Metadata_pert_idose = Metadata_mmoles_per_liter)
+  dplyr::rename(Metadata_pert_idose = Metadata_mmoles_per_liter) %>%
+  dplyr::rowwise() %>%
+  dplyr::mutate(Metadata_pert_id = stringr::str_extract(Metadata_broad_sample, "(BRD-[A-Z0-9]+)"))
 
 collapsed %>% readr::write_csv(paste0(backend_dir, "/", batch_id, ".csv"))
   
