@@ -268,4 +268,23 @@ collapsed %>% write_gct(paste0(backend_dir, "/", batch_id, ".gct"))
 ```
 
 
+```{r split_by_dose}
+collapsed %<>%
+  group_by(Metadata_broad_sample) %>% 
+  mutate(Metadata_pert_idose_rank = row_number(Metadata_pert_idose)) %>%
+  ungroup()
+  
+  
+collapsed %>%
+  split(.$Metadata_pert_idose_rank) %>%
+  lapply(function(data) {
+    data %>%
+      write_gct(
+        paste0(backend_dir, "/", batch_id, "_dose_", data$Metadata_pert_idose_rank[1], ".gct")
+        )
+  }) %>%
+  invisible()
+```
+
+
 
