@@ -61,7 +61,7 @@ df %>%
 
 ```{r variance_threshold}
 df <-
-  cytominr::select(
+  cytominer::select(
     population = df,
     variables = feature_cols,
     sample = df,
@@ -161,7 +161,7 @@ feature_cols <-
 
 ```{r correlation_threshold}
 df <-
-  cytominr::select(
+  cytominer::select(
     population = df,
     variables = feature_cols,
     sample = df,
@@ -180,7 +180,7 @@ feature_cols <-
 futile.logger::flog.threshold(futile.logger::DEBUG)
 
 normalized <-
-  cytominr::normalize(
+  cytominer::normalize(
     population = df,
     variables = feature_cols,
     strata =  c("Metadata_Plate"),

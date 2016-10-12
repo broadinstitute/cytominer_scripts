@@ -20,7 +20,7 @@ feature_cols <-
   stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
 
 aggregated <-
-  cytominr::aggregate(
+  cytominer::aggregate(
     population = object,
     variables = feature_cols,
     strata = c("Image_Metadata_Plate", "Image_Metadata_Well"),
