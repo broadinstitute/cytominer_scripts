@@ -90,7 +90,7 @@ function CREATE_BACKEND_FILE() {
     if [[ $CHECK_RESULT = 0 || $CHECK_RESULT = 1 ]]; then
 	rm -rf ${BACKEND_FILE}
 
-	time ingest $PLATE_DIR -o sqlite:///${BACKEND_FILE} -c ingest_config.ini --skipmunge
+	time ingest $PLATE_DIR -o sqlite:///${BACKEND_FILE} -c ingest_config.ini --no-munge
     fi
 
     CHECK_PATH EXISTS $BACKEND_FILE
