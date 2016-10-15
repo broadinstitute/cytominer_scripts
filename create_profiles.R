@@ -24,16 +24,10 @@ aggregated <-
     population = object,
     variables = feature_cols,
     strata = c("Image_Metadata_Plate", "Image_Metadata_Well"),
-    operation = "mean"
+    operation = "median"
   )
 
 futile.logger::flog.info("Started checking aggregated")
-
-plate_count <- aggregated %>% dplyr::count(Image_Metadata_Plate) %>% dplyr::collect() 
-
-print(knitr::kable(plate_count))
-
-testthat::expect_equal(plate_count %>% magrittr::extract2("n"), 384)
 
 futile.logger::flog.info("Finished checking aggregated")
 
