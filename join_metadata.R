@@ -3,11 +3,9 @@ suppressWarnings(suppressMessages(library(magrittr)))
 
 args = commandArgs(trailingOnly=TRUE)
 
-#batch_id <- args[1] #"2016_04_01_a549_48hr_batch1"
-batch_id <- "2016_04_01_a549_48hr_batch1"
+batch_id <- args[1]
 
-#plate_id <- args[2] #"SQ00015116"
-plate_id <- "SQ00015116"
+plate_id <- args[2]
 
 metadata_dir <- paste("../..", "metadata", batch_id, sep = "/")
 
