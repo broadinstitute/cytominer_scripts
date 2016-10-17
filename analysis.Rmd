@@ -1,6 +1,7 @@
 ```{r load_libraries}
 library(dplyr)
 library(magrittr)
+library(stringr)
 source("write_gct.R")
 ```
 
@@ -47,11 +48,11 @@ df %<>%
   
 feature_cols <-
   colnames(df) %>%
-  stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
+  str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
 
 metadata_cols <-
   colnames(df) %>%
-  stringr::str_subset("^Metadata_")
+  str_subset("^Metadata_")
 
 df %>% 
   count(Metadata_Compound_Plate_Map_Name, Metadata_Plate) %>%
@@ -67,11 +68,11 @@ df <-
     sample = df,
     operation = "variance_threshold"
   ) %>%
-  dplyr::collect()
+  collect()
 
 feature_cols <-
   colnames(df) %>%
-  stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
+  str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
 ```
 
 
@@ -89,10 +90,10 @@ calculate_feature_replicate_correlation <- function(data,
   
   correlation_matrix <- 
     data %>%
-    dplyr::arrange_(.dots = grouping_cols) %>%
-    dplyr::select_(.dots = c(grouping_cols, feature_col)) %>% 
+    arrange_(.dots = grouping_cols) %>%
+    select_(.dots = c(grouping_cols, feature_col)) %>% 
     tidyr::spread_(key_col, feature_col) %>% 
-    dplyr::select_(~-dplyr::one_of(nonkey_grouping_cols)) %>%
+    select_(~-one_of(nonkey_grouping_cols)) %>%
     cor()
   
   median(correlation_matrix[upper.tri(correlation_matrix)])
@@ -110,11 +111,11 @@ calculate_feature_replicate_correlations <-
                       feature_col = feature_col,
                       grouping_cols = grouping_cols,
                       key_col = key_col) %>% 
-        dplyr::mutate(feature_col = feature_col)
+        mutate(feature_col = feature_col)
     } %>%
       tidyr::gather_(key_col, "pearson", setdiff(names(.), "feature_col")) %>% 
-      dplyr::group_by(feature_col) %>% 
-      dplyr::summarize_at("pearson", dplyr::funs(median, min, max))
+      group_by(feature_col) %>% 
+      summarize_at("pearson", funs(median, min, max))
 }
 
 ```
@@ -147,7 +148,7 @@ if(!exists("feature_replicate_correlations")) {
 }
 
 df %<>% 
-  dplyr::select_(.dots = setdiff(x = colnames(df), 
+  select_(.dots = setdiff(x = colnames(df), 
         y = feature_replicate_correlations %>% 
           filter(min < 0.6) %>% 
           magrittr::extract2("feature_col"))
@@ -155,7 +156,7 @@ df %<>%
 
 feature_cols <-
   colnames(df) %>%
-  stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
+  str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
 ```
 
 
@@ -167,11 +168,11 @@ df <-
     sample = df,
     operation = "correlation_threshold"
   ) %>%
-  dplyr::collect()
+  collect()
 
 feature_cols <-
   colnames(df) %>%
-  stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
+  str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
 ```
 
 
@@ -184,30 +185,30 @@ normalized <-
     population = df,
     variables = feature_cols,
     strata =  c("Metadata_Plate"),
-    sample = df %>% dplyr::filter(Metadata_broad_sample_type == "control")
+    sample = df %>% filter(Metadata_broad_sample_type == "control")
   )
 
 # Check if data was normalized correctly by checking if mean of control wells
 # is zero
 normalized %>%
-  dplyr::filter(Metadata_broad_sample_type == "control") %>%
-  dplyr::group_by(Metadata_Plate) %>%
-  dplyr::summarise_at(feature_cols, mean) %>%
+  filter(Metadata_broad_sample_type == "control") %>%
+  group_by(Metadata_Plate) %>%
+  summarise_at(feature_cols, mean) %>%
   tidyr::gather(feature_col, error, -Metadata_Plate) %>%
-  dplyr::group_by(feature_col) %>%
-  dplyr::summarize(error = max(error)) %>%
-  dplyr::summarize(max_error = max(error)) 
+  group_by(feature_col) %>%
+  summarize(error = max(error)) %>%
+  summarize(max_error = max(error)) 
 ```
 
 
 ```{r save_output}
 per_well_csv_normalized <-
   per_well_csv %>% 
-  dplyr::select(Assay_Plate_Barcode, flist) %>%
-  dplyr::rename(Metadata_Assay_Plate_Barcode = Assay_Plate_Barcode) %>%
-  dplyr::rowwise() %>%
-  dplyr::mutate(flist = stringr::str_replace(flist, "augmented", "normalized")) %>%
-  dplyr::ungroup()
+  select(Assay_Plate_Barcode, flist) %>%
+  rename(Metadata_Assay_Plate_Barcode = Assay_Plate_Barcode) %>%
+  rowwise() %>%
+  mutate(flist = str_replace(flist, "augmented", "normalized")) %>%
+  ungroup()
 
 
 normalized %>%
@@ -215,17 +216,17 @@ normalized %>%
   lapply(function(data) {
     csv_fname <-
       per_well_csv_normalized %>%
-      dplyr::filter(Metadata_Assay_Plate_Barcode == data$Metadata_Assay_Plate_Barcode[1]) %>%
+      filter(Metadata_Assay_Plate_Barcode == data$Metadata_Assay_Plate_Barcode[1]) %>%
       magrittr::extract2("flist")
 
     futile.logger::flog.info(csv_fname)
     
-    gct_fname <- stringr::str_replace(csv_fname, "csv$", "gct")
+    gct_fname <- str_replace(csv_fname, "csv$", "gct")
 
     futile.logger::flog.info(gct_fname)
 
     data %>%
-      dplyr::arrange(Metadata_Well) %>%
+      arrange(Metadata_Well) %>%
       readr::write_csv(csv_fname)
 
     data %>%
@@ -240,26 +241,26 @@ normalized %>%
 ```{r save_all_data}
 moa <- 
   readr::read_tsv(paste0(metadata_dir, "/", "cell_painting_dataset_compound_list_anot.tsv")) %>%
-  dplyr::select(Metadata_broad_sample, Metadata_pert_iname, Metadata_MoAs) %>% 
-  dplyr::distinct()
+  select(Metadata_broad_sample, Metadata_pert_iname, Metadata_MoAs) %>% 
+  distinct()
 
 feature_cols <-
   colnames(normalized) %>%
-  stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
+  str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
   
 collapsed <-
   normalized %>%
-  dplyr::inner_join(moa) %<>%
-  dplyr::group_by(Metadata_Compound_Plate_Map_Name,
+  inner_join(moa) %<>%
+  group_by(Metadata_Compound_Plate_Map_Name,
                   Metadata_broad_sample,
                   Metadata_pert_iname,
                   Metadata_mmoles_per_liter,
                   Metadata_MoAs) %>% 
-  dplyr::summarise_at(.cols = feature_cols, .funs = mean) %>%
-  dplyr::ungroup() %>% 
-  dplyr::rename(Metadata_pert_idose = Metadata_mmoles_per_liter) %>%
-  dplyr::rowwise() %>%
-  dplyr::mutate(Metadata_pert_id = stringr::str_extract(Metadata_broad_sample, "(BRD-[A-Z0-9]+)"))
+  summarise_at(.cols = feature_cols, .funs = mean) %>%
+  ungroup() %>% 
+  rename(Metadata_pert_idose = Metadata_mmoles_per_liter) %>%
+  rowwise() %>%
+  mutate(Metadata_pert_id = str_extract(Metadata_broad_sample, "(BRD-[A-Z0-9]+)"))
 
 collapsed %>% readr::write_csv(paste0(backend_dir, "/", batch_id, ".csv"))
   
