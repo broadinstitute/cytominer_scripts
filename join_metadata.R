@@ -14,6 +14,7 @@ backend_dir <- paste("../..", "backend", batch_id, plate_id, sep = "/")
 profiles <- readr::read_csv(paste(backend_dir, paste0(plate_id, ".csv"), sep = "/"))
 
 # read profiles
+
 cnames <- colnames(profiles)
 
 cnames %<>% stringr::str_replace_all("^Image_Metadata", "Metadata")
@@ -38,11 +39,11 @@ profiles %<>% inner_join(metadata_map, by = c("Metadata_Assay_Plate_Barcode"))
 
 # read and join platemap
 
-cpd_map_name <- profiles %>% select(Metadata_Compound_Plate_Map_Name) %>% distinct() %>% extract2("Metadata_Compound_Plate_Map_Name")
+platemap_name <- profiles %>% select(Metadata_Plate_Map_Name) %>% distinct() %>% extract2("Metadata_Plate_Map_Name")
 
-testthat::expect_equal(length(cpd_map_name), 1)
+testthat::expect_equal(length(platemap_name), 1)
 
-platemap <- readr::read_tsv(paste(metadata_dir, "platemap_cpd", paste0(cpd_map_name, ".txt"), sep = "/"))
+platemap <- readr::read_tsv(paste(metadata_dir, "platemap", paste0(platemap_name, ".txt"), sep = "/"))
 
 testthat::expect_true("well_position" %in% colnames(platemap))
 
