@@ -172,7 +172,9 @@ done
 
 TMP_DIR="${TMP_DIR:-/tmp}"
 
-for var in BATCH_ID PLATE_ID TMP_DIR;
+PIPELINE="${PIPELINE:-analysis}"
+
+for var in BATCH_ID PIPELINE PLATE_ID TMP_DIR;
 do 
     if [[  -z "${!var}"  ]];
     then
@@ -181,7 +183,7 @@ do
     fi
 done
 
-PLATE_DIR=`readlink -e ../../analysis/${BATCH_ID}/${PLATE_ID}/`
+PLATE_DIR=`readlink -e ../../analysis/${BATCH_ID}/${PLATE_ID}/${PIPELINE}/`
 
 BACKEND_DIR=${TMP_DIR}/${BATCH_ID}/${PLATE_ID}/
 
