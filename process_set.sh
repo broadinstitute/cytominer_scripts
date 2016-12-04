@@ -40,9 +40,8 @@ do
     fi
 done
 
-PLATES=`csvjoin -c Plate_Map_Name ../../metadata/${BATCH_ID}/barcode_platemap.csv <(printf "Plate_Map_Name\n${SET_ID}\n")|csvcut -c Assay_Plate_Barcode|tail -n +2`
+PLATES=`csvjoin -c Plate_Map_Name ../../metadata/${BATCH_ID}/barcode_platemap.csv <(printf "Plate_Map_Name\n${SET_ID}\n")|csvcut -c Assay_Plate_Barcode|tail -n +2|tr '\n' ' '`
 
 echo Running process on $PLATES
 
-tmux new-session -d -s s${SET_ID} 'parallel --dryrun --results ../../scratch/${SET_ID} ./process.sh --batchid 2016_04_01_a549_48hr_batch1 --plate {1} --tmpdir ~/tmp ::: ${PLATES}; bash -i'
-
+tmux new-session -d -s s${SET_ID} "parallel --dryrun --results ../../scratch/${SET_ID} ./process.sh --batchid 2016_04_01_a549_48hr_batch1 --plate {1} --tmpdir ~/tmp ::: ${PLATES}; bash -i"
