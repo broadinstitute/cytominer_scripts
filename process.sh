@@ -1,6 +1,12 @@
 #!/bin/bash
 source ./util.sh
 
+if [[ $OSTYPE == "darwin15" ]]; then
+    shopt -s expand_aliases
+
+    alias readlink="greadlink"
+fi
+
 function CREATE_BACKEND_FILE() {
 
     INFO "Creating ${BACKEND_FILE}"
