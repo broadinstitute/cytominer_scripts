@@ -4,7 +4,8 @@ args = commandArgs(trailingOnly=TRUE)
 
 db <- dplyr::src_sqlite(path = args[1])
 
-image <- dplyr::tbl(src = db, "image")
+image <- dplyr::tbl(src = db, "image") %>% 
+  dplyr::select(TableNumber, ImageNumber, Image_Metadata_Plate, Image_Metadata_Well)
 
 object <-
   dplyr::tbl(src = db, "cells") %>%
