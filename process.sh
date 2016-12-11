@@ -151,7 +151,7 @@ fi
 
 # join with metadata
 
-Rscript -e "extends <- methods::extends; source('join_metadata.R')" $BATCH_ID $PLATE_ID
+./join_metadata.R -b $BATCH_ID -p $PLATE_ID
 
 CHECK_PATH EXISTS $AGGREGATED_WITH_METADATA_ARCHIVE_FILE
 

@@ -1,17 +1,28 @@
+#!/usr/bin/env Rscript
+
+'usage: my_prog.R -b <BATCH_ID> -p <BATCH_ID>
+
+options:
+ -b <BATCH_ID>, --batch_id=<BATCH_ID> Batch ID
+ -p <BATCH_ID>, --plate_id=<PLATE_ID> Plate ID' -> doc
+
+suppressWarnings(suppressMessages(library(docopt)))
+# retrieve the command-line arguments
+opts <- docopt(doc)
+
 suppressWarnings(suppressMessages(library(dplyr)))
 suppressWarnings(suppressMessages(library(magrittr)))
 
-args = commandArgs(trailingOnly=TRUE)
 
-batch_id <- args[1]
+batch_id <- opts["batch_id"]
 
-plate_id <- args[2]
+plate_id <- opts["plate_id"]
 
 metadata_dir <- paste("../..", "metadata", batch_id, sep = "/")
 
 backend_dir <- paste("../..", "backend", batch_id, plate_id, sep = "/")
 
-profiles <- readr::read_csv(paste(backend_dir, paste0(plate_id, ".csv"), sep = "/"))
+profiles <- suppressMessages(readr::read_csv(paste(backend_dir, paste0(plate_id, ".csv"), sep = "/")))
 
 # read profiles
 
@@ -23,7 +34,7 @@ names(profiles) <- cnames
 
 # read and join metadata map
 
-metadata_map <- readr::read_csv(paste(metadata_dir, "barcode_platemap.csv", sep = "/"))
+metadata_map <- suppressMessages(readr::read_csv(paste(metadata_dir, "barcode_platemap.csv", sep = "/")))
 
 testthat::expect_true("Assay_Plate_Barcode" %in% colnames(metadata_map))
 
@@ -43,7 +54,7 @@ platemap_name <- profiles %>% select(Metadata_Plate_Map_Name) %>% distinct() %>%
 
 testthat::expect_equal(length(platemap_name), 1)
 
-platemap <- readr::read_tsv(paste(metadata_dir, "platemap", paste0(platemap_name, ".txt"), sep = "/"))
+platemap <- suppressMessages(readr::read_tsv(paste(metadata_dir, "platemap", paste0(platemap_name, ".txt"), sep = "/")))
 
 testthat::expect_true("well_position" %in% colnames(platemap))
 
