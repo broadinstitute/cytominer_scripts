@@ -1,29 +1,29 @@
-function CHECK_PATH {
+function check_path {
 
-    STATE=$1
+    state=$1
 
-    PATHVAR=$2
+    pathvar=$2
 
-    if [[ ($STATE != "EXISTS") && ($STATE != "NOT_EXISTS") ]]; then	
-	(>&2 echo "Unknown state: $STATE")
+    if [[ ($state != "exists") && ($state != "not_exists") ]]; then	
+	(>&2 echo "Unknown state: $state")
 
 	exit 1
     fi
 
     tstamp=`date`
 
-    if [[ $STATE == "EXISTS" && ! -a "$PATHVAR" ]]; then
-	MESSAGE="not created / does not exist."
+    if [[ $state == "exists" && ! -a "$pathvar" ]]; then
+	message="not created / does not exist."
 
-	(>&2 echo "[$tstamp] ${PATHVAR}" $MESSAGE "Exiting.")
+	(>&2 echo "[$tstamp] ${pathvar}" $message "Exiting.")
 	    
 	exit 1
     fi
     
-    if [[ $STATE == "NOT_EXISTS" && -a "$PATHVAR" ]]; then
-	    MESSAGE="exists."
+    if [[ $state == "not_exists" && -a "$pathvar" ]]; then
+	    message="exists."
 
-	    (>&2 echo "[$tstamp] ${PATHVAR} $MESSAGE")
+	    (>&2 echo "[$tstamp] ${pathvar} $message")
 
 	    while true; do
 		read -p "Overwrite? (Y/N)" yn
@@ -39,13 +39,13 @@ function CHECK_PATH {
     return 0
 }
 
-function INFO {
+function info {
     tstamp=`date`
 
     (>&2 echo "[$tstamp] $1")
 }
 
-function COMPARE_MD5() {
+function compare_md5() {
 
     A=$1
 
@@ -66,24 +66,24 @@ function COMPARE_MD5() {
     fi
 }
 
-function CREATE_AND_CHECK_DIR () {
+function create_and_check_dir () {
 
-    DNAME=$1
+    dname=$1
 
-    mkdir -p ${DNAME}
+    mkdir -p ${dname}
 
-    CHECK_PATH EXISTS ${DNAME}
+    check_path exists ${dname}
     
-    echo `readlink -e $DNAME`
+    echo `readlink -e $dname`
 }
 
-function CHECK_CMD_EXISTS () {
+function check_cmd_exists () {
 
-    CMDSTR=$1
+    cmdstr=$1
 
-    eval type $CMDSTR >/dev/null 2>&1 || { 
+    eval type $cmdstr >/dev/null 2>&1 || { 
 
-	echo >&2 "$CMDSTR not installed.  Aborting."
+	echo >&2 "$cmdstr not installed.  Aborting."
 
 	exit 1
     }

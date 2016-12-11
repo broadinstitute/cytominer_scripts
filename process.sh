@@ -7,67 +7,67 @@ if [[ $OSTYPE == "darwin15" ]]; then
     alias readlink="greadlink"
 fi
 
-function CREATE_BACKEND_FILE() {
+function create_backend_file() {
 
-    INFO "Creating ${BACKEND_FILE}"
+    info "Creating ${backend_file}"
 
-    CHECK_PATH NOT_EXISTS $BACKEND_FILE
+    check_path not_exists $backend_file
 
-    CHECK_RESULT=$?
+    check_result=$?
 
-    if [[ $CHECK_RESULT = 0 || $CHECK_RESULT = 1 ]]; then
-	rm -rf ${BACKEND_FILE}
+    if [[ $check_result = 0 || $check_result = 1 ]]; then
+	rm -rf ${backend_file}
 
-	time ingest $PLATE_DIR -o sqlite:///${BACKEND_FILE} -c ingest_config.ini --no-munge
+	time ingest $plate_dir -o sqlite:///${backend_file} -c ingest_config.ini --no-munge
     fi
 
-    CHECK_PATH EXISTS $BACKEND_FILE
+    check_path exists $backend_file
 
-    INFO "Indexing ${BACKEND_FILE}"
+    info "Indexing ${backend_file}"
 
-    time sqlite3 ${BACKEND_FILE} < indices.sql
+    time sqlite3 ${backend_file} < indices.sql
 
 }
 
-function CREATE_AGGREGATED_FILE () {
+function create_aggregated_file () {
 
-    INFO "Aggregating ${BACKEND_FILE}"
+    info "Aggregating ${backend_file}"
 
-    CHECK_PATH NOT_EXISTS $AGGREGATED_FILE
+    check_path not_exists $aggregated_file
 
-    CHECK_RESULT=$?
+    check_result=$?
 
-    if [[ $CHECK_RESULT == 0 || $CHECK_RESULT == 1 ]]; then
-	rm -rf $AGGREGATED_FILE
+    if [[ $check_result == 0 || $check_result == 1 ]]; then
+	rm -rf $aggregated_file
 
-	time Rscript -e "extends <- methods::extends; source('create_profiles.R')" ${BACKEND_FILE} ${AGGREGATED_FILE}
+	time Rscript -e "extends <- methods::extends; source('create_profiles.R')" ${backend_file} ${aggregated_file}
 
     fi
 
-    CHECK_PATH EXISTS $AGGREGATED_FILE
+    check_path exists $aggregated_file
 }
 
-function ARCHIVE_BACKEND_FILE () {
+function archive_backend_file () {
 
-    INFO "Moving ${BACKEND_FILE} to ${BACKEND_ARCHIVE_FILE}"
+    info "Moving ${backend_file} to ${backend_archive_file}"
 
-    rsync -a ${BACKEND_FILE} ${BACKEND_ARCHIVE_FILE}
+    rsync -a ${backend_file} ${backend_archive_file}
 
-    COMPARE_MD5 ${BACKEND_FILE} ${BACKEND_ARCHIVE_FILE}
+    compare_md5 ${backend_file} ${backend_archive_file}
 
-    rm ${BACKEND_FILE}
+    rm ${backend_file}
 
 }
 
-function ARCHIVE_AGGREGATED_FILE () {
+function archive_aggregated_file () {
 
-    INFO "Moving ${AGGREGATED_FILE} to ${AGGREGATED_ARCHIVE_FILE}"
+    info "Moving ${aggregated_file} to ${aggregated_archive_file}"
 
-    rsync -a ${AGGREGATED_FILE} ${AGGREGATED_ARCHIVE_FILE}
+    rsync -a ${aggregated_file} ${aggregated_archive_file}
 
-    COMPARE_MD5 ${AGGREGATED_FILE} ${AGGREGATED_ARCHIVE_FILE}
+    compare_md5 ${aggregated_file} ${aggregated_archive_file}
 
-    rm ${AGGREGATED_FILE}
+    rm ${aggregated_file}
 }
 
 programname=$0
@@ -80,15 +80,15 @@ key="$1"
 
 case $key in
     -b|--batchid)
-    BATCH_ID="$2"
+    batch_id="$2"
     shift
     ;;
     -p|--plate)
-    PLATE_ID="$2"
+    plate_id="$2"
     shift
     ;;
     -t|--tmpdir)
-    TMP_DIR="$2"
+    tmp_dir="$2"
     shift
     ;;
     *)
@@ -98,11 +98,11 @@ esac
 shift
 done
 
-TMP_DIR="${TMP_DIR:-/tmp}"
+tmp_dir="${tmp_dir:-/tmp}"
 
-PIPELINE="${PIPELINE:-analysis}"
+pipeline="${pipeline:-analysis}"
 
-for var in BATCH_ID PIPELINE PLATE_ID TMP_DIR;
+for var in batch_id pipeline plate_id tmp_dir;
 do 
     if [[  -z "${!var}"  ]];
     then
@@ -111,47 +111,47 @@ do
     fi
 done
 
-PLATE_DIR=`readlink -e ../../analysis/${BATCH_ID}/${PLATE_ID}/${PIPELINE}/`
+plate_dir=`readlink -e ../../analysis/${batch_id}/${plate_id}/${pipeline}/`
 
-BACKEND_DIR=${TMP_DIR}/${BATCH_ID}/${PLATE_ID}/
+backend_dir=${tmp_dir}/${batch_id}/${plate_id}/
 
-BACKEND_FILE=${BACKEND_DIR}/${PLATE_ID}.sqlite
+backend_file=${backend_dir}/${plate_id}.sqlite
 
-AGGREGATED_FILE=${BACKEND_DIR}/${PLATE_ID}.csv
+aggregated_file=${backend_dir}/${plate_id}.csv
 
-BACKEND_ARCHIVE_DIR="../../backend/${BATCH_ID}/${PLATE_ID}/"
+backend_archive_dir="../../backend/${batch_id}/${plate_id}/"
 
-BACKEND_ARCHIVE_FILE=${BACKEND_ARCHIVE_DIR}/${PLATE_ID}.sqlite
+backend_archive_file=${backend_archive_dir}/${plate_id}.sqlite
 
-AGGREGATED_ARCHIVE_FILE=${BACKEND_ARCHIVE_DIR}/${PLATE_ID}.csv
+aggregated_archive_file=${backend_archive_dir}/${plate_id}.csv
 
-AGGREGATED_WITH_METADATA_ARCHIVE_FILE=${BACKEND_ARCHIVE_DIR}/${PLATE_ID}_augmented.csv
+aggregated_with_metadata_archive_file=${backend_archive_dir}/${plate_id}_augmented.csv
 
-if [[ (! -e $BACKEND_ARCHIVE_FILE) || (! -e $AGGREGATED_ARCHIVE_FILE) ]]; then
+if [[ (! -e $backend_archive_file) || (! -e $aggregated_archive_file) ]]; then
 
-    CHECK_PATH EXISTS ${PLATE_DIR}
+    check_path exists ${plate_dir}
     
-    BACKEND_DIR=$(CREATE_AND_CHECK_DIR $BACKEND_DIR)
+    backend_dir=$(create_and_check_dir $backend_dir)
 
-    CREATE_BACKEND_FILE
+    create_backend_file
 
-    CREATE_AGGREGATED_FILE
+    create_aggregated_file
 
-    BACKEND_ARCHIVE_DIR=$(CREATE_AND_CHECK_DIR $BACKEND_ARCHIVE_DIR)
+    backend_archive_dir=$(create_and_check_dir $backend_archive_dir)
 
-    ARCHIVE_BACKEND_FILE
+    archive_backend_file
 
-    ARCHIVE_AGGREGATED_FILE
+    archive_aggregated_file
 
 else
     
-    INFO "$BACKEND_ARCHIVE_FILE and $AGGREGATED_ARCHIVE_FILE already exist. Will not recreate them."
+    info "$backend_archive_file and $aggregated_archive_file already exist. Will not recreate them."
 
 fi
 
 # join with metadata
 
-./join_metadata.R -b $BATCH_ID -p $PLATE_ID
+./join_metadata.R -b $batch_id -p $plate_id
 
-CHECK_PATH EXISTS $AGGREGATED_WITH_METADATA_ARCHIVE_FILE
+check_path exists $aggregated_with_metadata_archive_file
 
