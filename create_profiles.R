@@ -7,11 +7,13 @@ options:
 
 suppressWarnings(suppressMessages(library(docopt)))
 
-library(magrittr)
+suppressWarnings(suppressMessages(library(dplyr)))
+
+suppressWarnings(suppressMessages(library(magrittr)))
 
 opts <- docopt(doc)
 
-db <- dplyr::src_sqlite(path = opts["sqlite_file"])
+db <- dplyr::src_sqlite(path = opts[["sqlite_file"]])
 
 image <- dplyr::tbl(src = db, "image") %>% 
   dplyr::select(TableNumber, ImageNumber, Image_Metadata_Plate, Image_Metadata_Well)
@@ -47,6 +49,6 @@ aggregated %<>% dplyr::collect()
 
 futile.logger::flog.info("Finished collecting aggregated")
 
-futile.logger::flog.info(paste0("Writing aggregated to ", opts["csv_file"]))
+futile.logger::flog.info(paste0("Writing aggregated to ", opts[["output"]]))
 
-aggregated %>% readr::write_csv(opts["csv_file"])
+aggregated %>% readr::write_csv(opts[["output"]])

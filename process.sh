@@ -5,6 +5,8 @@ if [[ $OSTYPE == "darwin15" ]]; then
     shopt -s expand_aliases
 
     alias readlink="greadlink"
+
+    alias md5sum="md5"
 fi
 
 function create_backend_file() {

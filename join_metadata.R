@@ -14,9 +14,9 @@ suppressWarnings(suppressMessages(library(magrittr)))
 
 opts <- docopt(doc)
 
-batch_id <- opts["batch_id"]
+batch_id <- opts[["batch_id"]]
 
-plate_id <- opts["plate_id"]
+plate_id <- opts[["plate_id"]]
 
 metadata_dir <- paste("../..", "metadata", batch_id, sep = "/")
 
