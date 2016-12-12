@@ -1,18 +1,18 @@
 #!/usr/bin/env Rscript
 
-'usage: my_prog.R -b <BATCH_ID> -p <BATCH_ID>
+'usage: join_metadata.R -b <id> -p <id>
 
 options:
- -b <BATCH_ID>, --batch_id=<BATCH_ID> Batch ID
- -p <BATCH_ID>, --plate_id=<PLATE_ID> Plate ID' -> doc
+ -b <id>, --batch_id=<id> Batch ID
+ -p <id>, --plate_id=<id> Plate ID' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
-# retrieve the command-line arguments
-opts <- docopt(doc)
 
 suppressWarnings(suppressMessages(library(dplyr)))
+
 suppressWarnings(suppressMessages(library(magrittr)))
 
+opts <- docopt(doc)
 
 batch_id <- opts["batch_id"]
 
@@ -22,15 +22,11 @@ metadata_dir <- paste("../..", "metadata", batch_id, sep = "/")
 
 backend_dir <- paste("../..", "backend", batch_id, plate_id, sep = "/")
 
+# read profiles and rename column names 
+
 profiles <- suppressMessages(readr::read_csv(paste(backend_dir, paste0(plate_id, ".csv"), sep = "/")))
 
-# read profiles
-
-cnames <- colnames(profiles)
-
-cnames %<>% stringr::str_replace_all("^Image_Metadata", "Metadata")
-
-names(profiles) <- cnames
+profiles %<>% setNames(names(profiles) %>% stringr::str_replace_all("^Image_Metadata", "Metadata"))
 
 # read and join metadata map
 
@@ -67,6 +63,8 @@ names(platemap) <- cnames
 profiles %<>% mutate(Metadata_well_position = Metadata_Well)
 
 profiles %<>% inner_join(platemap, by = c("Metadata_well_position"))
+
+# save 
 
 profiles_with_metadata <- paste(backend_dir, paste0(plate_id, "_augmented.csv"), sep = "/")
 
