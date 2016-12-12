@@ -40,7 +40,7 @@ function create_aggregated_file () {
     if [[ $check_result == 0 || $check_result == 1 ]]; then
 	rm -rf $aggregated_file
 
-	time Rscript -e "extends <- methods::extends; source('create_profiles.R')" ${backend_file} ${aggregated_file}
+	time ./create_profiles.R ${backend_file} -o ${aggregated_file}
 
     fi
 
