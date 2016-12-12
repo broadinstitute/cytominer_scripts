@@ -1,8 +1,17 @@
+#!/usr/bin/env Rscript
+
+'usage: create_profiles.R <sqlite_file> -o <csv_file>
+
+options:
+-o <csv_file>, --output=<csv_file> per-well aggregated data' -> doc
+
+suppressWarnings(suppressMessages(library(docopt)))
+
 library(magrittr)
 
-args = commandArgs(trailingOnly=TRUE)
+opts <- docopt(doc)
 
-db <- dplyr::src_sqlite(path = args[1])
+db <- dplyr::src_sqlite(path = opts["sqlite_file"])
 
 image <- dplyr::tbl(src = db, "image") %>% 
   dplyr::select(TableNumber, ImageNumber, Image_Metadata_Plate, Image_Metadata_Well)
@@ -38,6 +47,6 @@ aggregated %<>% dplyr::collect()
 
 futile.logger::flog.info("Finished collecting aggregated")
 
-futile.logger::flog.info(paste0("Writing aggregated to ", args[2]))
+futile.logger::flog.info(paste0("Writing aggregated to ", opts["csv_file"]))
 
-aggregated %>% readr::write_csv(args[2])
+aggregated %>% readr::write_csv(opts["csv_file"])
