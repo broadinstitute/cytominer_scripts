@@ -9,6 +9,27 @@ if [[ $OSTYPE == "darwin15" ]]; then
     alias md5sum="md5"
 fi
 
+function lookup_backend_file() {
+
+    info "Looking up ${backend_file} on permanent store"
+
+    backend_permanent_file=$(echo `readlink -m $backend_archive_file`|sed "s/efs/bucket\/projects/g")
+
+    if [[ ! -a "$backend_permanent_file" ]]; then
+        info "$backend_permanent_file not found"
+
+    else
+        info "$backend_permanent_file found. Copying ..."
+
+        backend_permanent_file_url=$(echo $backend_permanent_file|sed "s,/home/ubuntu/bucket/,s3://imaging-platform/,g")
+
+        echo aws s3 cp $backend_permanent_file_url $backend_file
+
+        info "$backend_permanent_file_url copied to $backend_file"
+
+    fi
+}
+
 function create_backend_file() {
 
     info "Creating ${backend_file}"
@@ -111,6 +132,8 @@ if [[ (! -e $backend_archive_file) || (! -e $aggregated_archive_file) ]]; then
     check_path exists ${plate_dir}
     
     backend_dir=$(create_and_check_dir $backend_dir)
+
+    lookup_backend_file
 
     create_backend_file
 
