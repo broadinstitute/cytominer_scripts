@@ -133,8 +133,6 @@ aggregated_with_metadata_archive_file=${backend_archive_dir}/${plate_id}_augment
 
 if [[ (! -e $backend_archive_file) || (! -e $aggregated_archive_file) ]]; then
 
-    check_path exists ${plate_dir}
-    
     backend_dir=$(create_and_check_dir $backend_dir)
 
     lookup_backend_file
@@ -143,6 +141,8 @@ if [[ (! -e $backend_archive_file) || (! -e $aggregated_archive_file) ]]; then
 
     if [[ $check_result == 1 ]]; then
 
+        check_path exists ${plate_dir}
+    
         create_backend_file
 
     fi
