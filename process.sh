@@ -106,9 +106,7 @@ tmp_dir="${tmp_dir:-/tmp}"
 
 pipeline="${pipeline:-analysis}"
 
-plate_dir=`readlink -e ../../analysis/${batch_id}/${plate_id}/${pipeline}/`
-
-for var in batch_id pipeline plate_dir plate_id tmp_dir;
+for var in batch_id pipeline plate_id tmp_dir;
 do 
     if [[  -z "${!var}"  ]];
     then
@@ -116,6 +114,8 @@ do
         exit 1
     fi
 done
+
+plate_dir=`readlink -m ../../analysis/${batch_id}/${plate_id}/${pipeline}/`
 
 backend_dir=${tmp_dir}/${batch_id}/${plate_id}/
 
