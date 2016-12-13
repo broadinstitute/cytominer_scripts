@@ -18,6 +18,8 @@ function lookup_backend_file() {
     if [[ ! -a "$backend_permanent_file" ]]; then
         info "$backend_permanent_file not found"
 
+        return 1
+
     else
         info "$backend_permanent_file found. Copying ..."
 
@@ -26,6 +28,8 @@ function lookup_backend_file() {
         aws s3 cp $backend_permanent_file_url $backend_file
 
         info "$backend_permanent_file_url copied to $backend_file"
+
+        return 0
 
     fi
 }
@@ -135,7 +139,13 @@ if [[ (! -e $backend_archive_file) || (! -e $aggregated_archive_file) ]]; then
 
     lookup_backend_file
 
-    create_backend_file
+    check_result=$?
+
+    if [[ $check_result == 1 ]]; then
+
+        create_backend_file
+
+    fi
 
     create_aggregated_file
 
