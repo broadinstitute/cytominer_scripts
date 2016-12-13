@@ -11,7 +11,7 @@ fi
 
 function lookup_backend_file() {
 
-    info "Looking up ${backend_file} on permanent store"
+    info "Looking up $(basename ${backend_file}) on permanent store"
 
     backend_permanent_file=$(echo `readlink -m $backend_archive_file`|sed "s/efs/bucket\/projects/g")
 
@@ -23,7 +23,7 @@ function lookup_backend_file() {
 
         backend_permanent_file_url=$(echo $backend_permanent_file|sed "s,/home/ubuntu/bucket/,s3://imaging-platform/,g")
 
-        echo aws s3 cp $backend_permanent_file_url $backend_file
+        aws s3 cp $backend_permanent_file_url $backend_file
 
         info "$backend_permanent_file_url copied to $backend_file"
 
