@@ -43,9 +43,9 @@ function create_backend_file() {
     check_result=$?
 
     if [[ $check_result = 0 || $check_result = 1 ]]; then
-	rm -rf ${backend_file}
+       rm -rf ${backend_file}
 
-	time ingest $plate_dir -o sqlite:///${backend_file} -c ingest_config.ini --no-munge
+       time ingest $plate_dir -o sqlite:///${backend_file} -c ingest_config.ini --no-munge
     fi
 
     check_path exists $backend_file
@@ -65,9 +65,9 @@ function create_aggregated_file () {
     check_result=$?
 
     if [[ $check_result == 0 || $check_result == 1 ]]; then
-	rm -rf $aggregated_file
+       rm -rf $aggregated_file
 
-	time ./create_profiles.R ${backend_file} -o ${aggregated_file}
+       time ./create_profiles.R ${backend_file} -o ${aggregated_file}
 
     fi
 
