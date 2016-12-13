@@ -51,7 +51,7 @@ function create_aggregated_file () {
 
 programname=$0
 
-check_cmd_exists "ingest --help"
+check_cmd_exists ingest
 
 while [[ $# -gt 1 ]]
 do
