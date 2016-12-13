@@ -77,7 +77,26 @@ function create_and_check_dir () {
     echo `readlink -e $dname`
 }
 
+
+function move_and_check_file () {
+
+    src=$1
+
+    dst=$2
+
+    info "Moving ${src} to ${dst}"
+
+    rsync -a ${src} ${dst}
+
+    compare_md5 ${src} ${dst}
+
+    rm ${src}
+
+}
+
 function check_cmd_exists () {
+    # This doesn't catch the case where the cmd is a python command that is 
+    # available in a different pyenv environment.
 
     cmdstr=$1
 

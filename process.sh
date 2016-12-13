@@ -49,32 +49,9 @@ function create_aggregated_file () {
     check_path exists $aggregated_file
 }
 
-function archive_backend_file () {
-
-    info "Moving ${backend_file} to ${backend_archive_file}"
-
-    rsync -a ${backend_file} ${backend_archive_file}
-
-    compare_md5 ${backend_file} ${backend_archive_file}
-
-    rm ${backend_file}
-
-}
-
-function archive_aggregated_file () {
-
-    info "Moving ${aggregated_file} to ${aggregated_archive_file}"
-
-    rsync -a ${aggregated_file} ${aggregated_archive_file}
-
-    compare_md5 ${aggregated_file} ${aggregated_archive_file}
-
-    rm ${aggregated_file}
-}
-
 programname=$0
 
-ingest --help >/dev/null 2>&1 || { echo >&2 "ingest required but not installed. Exiting."; exit 1; }
+check_cmd_exists "ingest --help"
 
 while [[ $# -gt 1 ]]
 do
@@ -141,9 +118,9 @@ if [[ (! -e $backend_archive_file) || (! -e $aggregated_archive_file) ]]; then
 
     backend_archive_dir=$(create_and_check_dir $backend_archive_dir)
 
-    archive_backend_file
+    move_and_check_file $backend_file $backend_archive_file
 
-    archive_aggregated_file
+    move_and_check_file $aggregated_file $aggregated_archive_file
 
 else
     
