@@ -87,9 +87,3 @@ if (tools::file_ext(output) == "rds") {
 }
 
 
-# df_subset <-
-#   df %>% 
-#   distinct(Metadata_Plate_Map_Name, Metadata_Plate) %>% 
-
-#   inner_join(df, by = c("Metadata_Plate"))
-
