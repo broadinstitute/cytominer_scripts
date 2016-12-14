@@ -1,10 +1,11 @@
 #!/usr/bin/env Rscript
 
-'usage: create_variable_selections.R -i <file> -b <id> -r <list> [-s <query>]
+'usage: create_variable_selections.R -b <id> -i <file> -r <list> [-n <n>] [-s <query>] 
 
 options:
- -i <file>, --input=<file> test data on which to perform variable selection operations
  -b <id>, --batch_id=<id> Batch ID
+ -i <file>, --input=<file> test data on which to perform variable selection operations
+ -n <n>, --replicates=<n> number of replicates selected per plate map in <file>
  -r <list> --operations=<list> comma-separated list of operations
  -s <query> --subset=<query> query to create the training data by subsetting' -> doc
 
@@ -21,6 +22,8 @@ batch_id <- opts[["batch_id"]]
 input <- opts[["input"]]
 
 operations <- opts[["operations"]]
+
+replicates <- opts[["replicates"]]
 
 subset <- opts[["subset"]] #"Metadata_broad_sample_type == '''control'''"
 
@@ -76,7 +79,37 @@ for (operation in operations) {
           ) %>%
           collect()
 
-    } else if (operation == "replicate_correlation")
+    } else if (operation == "replicate_correlation") {
+        # This is handled differently because there is no direct way yet to do filtering in cytominer
+        # TODO: rewrite this after cytominer has an appropriate filtering function for this
+        testthat::expect_false(is.null(replicates), info="replicates should be specified when performing replicate_correlation")
+        
+        feature_replicate_correlations <-
+          df %>%
+          cytominer::replicate_correlation(
+            sample = .,
+            variables = variables,
+            strata = c("Metadata_Plate_Map_Name", "Metadata_Well"),
+            split_by = "Metadata_Plate_Map_Name",
+            replicates = replicates
+            )
+
+        feature_replicate_correlations %>% 
+          readr::write_csv(paste0("../../parameters/", batch_id, "/variable_selection/", operation, ".csv" ))
+
+        variables <- 
+          feature_replicate_correlations %>% 
+          na.omit() %>%
+          filter(median > 0.6) %>% # intentionally hard-coded to avoid confusion
+          magrittr::extract2("variable")
+
+        metadata <-
+          colnames(df) %>%
+          stringr::str_subset("^Metadata_")
+
+        df %<>% 
+          select_(.dots = c(metadata, variables))          
+    }
 
     variables <-
       colnames(df) %>%
