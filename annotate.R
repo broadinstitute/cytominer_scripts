@@ -59,11 +59,9 @@ platemap <- suppressMessages(readr::read_tsv(paste(metadata_dir, "platemap", pas
 
 testthat::expect_true("well_position" %in% colnames(platemap))
 
-cnames <- colnames(platemap)
+platemap %<>% select(-plate_map_name)
 
-cnames %<>% stringr::str_replace_all("^", "Metadata_")
-
-names(platemap) <- cnames
+platemap %<>% setNames(names(platemap) %>% stringr::str_replace_all("^", "Metadata_"))
 
 profiles %<>% mutate(Metadata_well_position = Metadata_Well)
 
