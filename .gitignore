@@ -76,3 +76,5 @@ ENV/
 packrat/lib*/
 analysis.html
 analysis_cache
+
+*.rds
