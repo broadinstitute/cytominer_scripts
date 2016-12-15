@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-'usage: save_data -b <id> -f <pattern> [-n <n>] -o -<file>
+'usage: save_data -b <id> -f <pattern> [-n <n>] -o <file>
 
 options:
 -b <id>, --batch_id=<id> Batch ID
