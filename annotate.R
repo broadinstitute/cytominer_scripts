@@ -6,10 +6,10 @@ Usage:
   annotate.R -b <id> -p <id> [-d -j <file>]
 
 Options:
-  -b <id>, --batch_id=<id>                 Batch ID.
-  -p <id>, --plate_id=<id>                 Plate ID.
-  -d, --format_broad_cmap                  Add columns to make compatible with Broad CMap naming conventions.
-  -j <file>, --external_metadata=<file>    External metadata to join with.' -> doc
+  -b <id> --batch_id=<id>                 Batch ID.
+  -p <id> --plate_id=<id>                 Plate ID.
+  -d --format_broad_cmap                  Add columns to make compatible with Broad CMap naming conventions.
+  -j <file> --external_metadata=<file>    External metadata to join with.' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 
@@ -68,6 +68,7 @@ profiles %<>% mutate(Metadata_well_position = Metadata_Well)
 profiles %<>% inner_join(platemap, by = c("Metadata_well_position"))
 
 # format_broad_cmap
+# TODO: add Metadata_cell_id Metadata_pert_type
 if (format_broad_cmap) {
     profiles %<>% 
         mutate(Metadata_broad_sample_type = ifelse(is.na(Metadata_broad_sample), "control", "trt"),
