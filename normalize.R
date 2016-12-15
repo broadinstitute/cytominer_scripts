@@ -3,13 +3,14 @@
 'normalize
 
 Usage: 
-  normalize.R -b <id> -p <id> -s <query> [-r <op>]
+  normalize.R -b <id> -p <id> -s <query> [-r <op>] [-t <dir>]
 
 Options:
   -b <id> --batch_id=<id>       Batch ID.
   -p <id> --plate_id=<id>       Plate ID.
   -r <op> --operation=<op>      Normalization operation [default: robustize].
-  -s <query> --subset=<query>   Query to specify the sample for estimating normalization parameters.' -> doc
+  -s <query> --subset=<query>   Query to specify the sample for estimating normalization parameters.
+  -t <dir> --tmpdir=<dir>       Temporary directory [default: /tmp]' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 
@@ -18,6 +19,8 @@ suppressWarnings(suppressMessages(library(dplyr)))
 suppressWarnings(suppressMessages(library(magrittr)))
 
 opts <- docopt(doc)
+
+# str(opts)
 
 batch_id <- opts[["batch_id"]]
 
@@ -31,7 +34,19 @@ backend_dir <- paste("../..", "backend", batch_id, plate_id, sep = "/")
 
 profiles <- suppressMessages(readr::read_csv(paste(backend_dir, paste0(plate_id, "_augmented.csv"), sep = "/")))
 
-load_single_cells <- function(path, metadata) {
+metadata <- 
+    profiles %>% 
+    select(matches("Metadata_")) %>%
+    distinct()
+
+load_single_cells <- function(metadata) {
+    path <- paste(backend_dir, paste0(plate_id, ".sqlite"), sep = "/")
+
+    # TODO: if file doesn't exist at path then copy it from S3 to a tmpdir
+    if (!file.exists(path)) {
+        stop(paste0(path, " does not exist"))
+    }
+
     db <- src_sqlite(path = path)
 
     metadata <- dplyr::copy_to(db, metadata)
@@ -54,14 +69,7 @@ load_single_cells <- function(path, metadata) {
     object
 }
 
-metadata <- 
-    profiles %>% 
-    select(matches("Metadata_")) %>%
-    distinct()
-
-single_cells <- 
-    load_single_cells(path = paste(backend_dir, paste0(plate_id, ".sqlite"), sep = "/"),
-                      metadata = metadata)
+single_cells <- load_single_cells(metadata = metadata)
 
 sample <- 
     single_cells %>% 
