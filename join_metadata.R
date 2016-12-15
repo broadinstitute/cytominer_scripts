@@ -1,10 +1,12 @@
 #!/usr/bin/env Rscript
 
-'usage: join_metadata.R -b <id> -p <id>
+'usage: join_metadata.R -b <id> -p <id> [-d -j <file>]
 
 options:
- -b <id>, --batch_id=<id> Batch ID
- -p <id>, --plate_id=<id> Plate ID' -> doc
+ -b <id>, --batch_id=<id>   Batch ID
+ -p <id>, --plate_id=<id>   Plate ID
+ -d, --format_broad_cmap    Add columns to make compatible with Broad CMap naming conventions
+ -j <file>, --external_metadata=<file>    external metadata to join with' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 
@@ -15,6 +17,10 @@ suppressWarnings(suppressMessages(library(magrittr)))
 opts <- docopt(doc)
 
 batch_id <- opts[["batch_id"]]
+
+external_metadata <- opts[["external_metadata"]]
+
+format_broad_cmap <- opts[["format_broad_cmap"]]
 
 plate_id <- opts[["plate_id"]]
 
@@ -34,11 +40,7 @@ metadata_map <- suppressMessages(readr::read_csv(paste(metadata_dir, "barcode_pl
 
 testthat::expect_true("Assay_Plate_Barcode" %in% colnames(metadata_map))
 
-cnames <- colnames(metadata_map)
-
-cnames %<>% stringr::str_replace_all("^", "Metadata_")
-
-names(metadata_map) <- cnames
+metadata_map %<>% setNames(names(metadata_map) %>% stringr::str_replace_all("^", "Metadata_"))
 
 profiles %<>% mutate(Metadata_Assay_Plate_Barcode = Metadata_Plate)
 
@@ -64,9 +66,54 @@ profiles %<>% mutate(Metadata_well_position = Metadata_Well)
 
 profiles %<>% inner_join(platemap, by = c("Metadata_well_position"))
 
+# format_broad_cmap
+if (format_broad_cmap) {
+    profiles %<>% 
+        mutate(Metadata_broad_sample_type = ifelse(is.na(Metadata_broad_sample), "control", "trt"),
+               Metadata_broad_sample = ifelse(Metadata_broad_sample_type =="control", "DMSO", Metadata_broad_sample),
+               Metadata_mg_per_ml = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mg_per_ml),
+               Metadata_mmoles_per_liter = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mmoles_per_liter),
+               Metadata_pert_id = stringr::str_extract(Metadata_broad_sample, "(BRD-[A-Z0-9]+)"),
+               Metadata_pert_mfc_id = Metadata_broad_sample,
+               Metadata_pert_well = Metadata_Well,
+               Metadata_pert_vehicle = Metadata_solvent,
+               Metadata_pert_idose = Metadata_mmoles_per_liter,
+               Metadata_pert_id_vendor = "")
+}
+
+# external_metadata
+if(!is.null(external_metadata)) {
+    external_metadata_df <- suppressMessages(readr::read_csv(external_metadata))
+
+    # Check whether the columns have "Metadata" prefix; if not, assume that all columsn need the suffix
+    if (length(grep("Metadata_", colnames(external_metadata_df))) == 0) {
+        external_metadata_df %<>% setNames(names(external_metadata_df) %>% stringr::str_replace_all("^", "Metadata_"))
+
+    }
+    
+    profiles %<>% 
+        left_join(
+            external_metadata_df %>% 
+            distinct()
+            )
+}
+
+
+# format_broad_cmap: columns that may be added after joining with external metadata
+if (format_broad_cmap) {
+
+    if ("Metadata_pert_iname" %in% colnames(profiles)) {
+        profiles %<>% 
+            mutate(Metadata_pert_mfc_desc = Metadata_pert_iname)
+
+    }
+
+}
+
+
 # save 
 
-profiles_with_metadata <- paste(backend_dir, paste0(plate_id, "_augmented.csv"), sep = "/")
+profiles_augmented <- paste(backend_dir, paste0(plate_id, "_augmented.csv"), sep = "/")
 
 metadata_cols <- stringr::str_subset(names(profiles), "^Metadata_")
 
@@ -74,4 +121,4 @@ feature_cols <- stringr::str_subset(names(profiles), "^Cells_|^Cytoplasm_|^Nucle
 
 all_cols <- c(metadata_cols, feature_cols)
 
-profiles[all_cols] %>% readr::write_csv(profiles_with_metadata)
+profiles[all_cols] %>% readr::write_csv(profiles_augmented)
