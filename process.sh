@@ -170,8 +170,10 @@ fi
 
 if [[ $format_broad_cmap == "YES" ]]; then 
     opt="-d"
+
 else
     opt=""
+    
 fi
 
 ./annotate.R -b $batch_id -p $plate_id $opt
