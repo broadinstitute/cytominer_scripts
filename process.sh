@@ -67,7 +67,7 @@ function create_aggregated_file () {
     if [[ $check_result == 0 || $check_result == 1 ]]; then
        rm -rf $aggregated_file
 
-       time ./create_profiles.R ${backend_file} -o ${aggregated_file}
+       time ./aggregate.R ${backend_file} -o ${aggregated_file}
 
     fi
 
@@ -163,7 +163,7 @@ fi
 
 # join with metadata
 
-./join_metadata.R -b $batch_id -p $plate_id
+./annotate.R -b $batch_id -p $plate_id
 
 check_path exists $aggregated_with_metadata_archive_file
 

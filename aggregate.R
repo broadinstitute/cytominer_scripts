@@ -1,9 +1,13 @@
 #!/usr/bin/env Rscript
 
-'usage: create_profiles.R <sqlite_file> -o <csv_file>
+'aggregate
 
-options:
--o <csv_file>, --output=<csv_file> per-well aggregated data' -> doc
+Usage: 
+  aggregate.R <sqlite_file> -o <file>
+
+Options:
+  -h --help                     Show this screen.
+  -o <file> --output=<file>     per-well aggregated data' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 
