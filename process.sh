@@ -78,7 +78,7 @@ programname=$0
 
 check_cmd_exists ingest
 
-while [[ $# -gt 1 ]]
+while [[ $# -gt 0 ]]
 do
 key="$1"
 
@@ -95,8 +95,11 @@ case $key in
     tmp_dir="$2"
     shift
     ;;
+    -d|--format_broad_cmap)
+    format_broad_cmap=YES
+    ;;
     *)
-    echo Unknown option
+    echo Unknown option $key
     ;;
 esac
 shift
@@ -105,6 +108,8 @@ done
 tmp_dir="${tmp_dir:-/tmp}"
 
 pipeline="${pipeline:-analysis}"
+
+format_broad_cmap="${format_broad_cmap:-NO}"
 
 for var in batch_id pipeline plate_id tmp_dir;
 do 
@@ -163,7 +168,13 @@ fi
 
 # join with metadata
 
-./annotate.R -b $batch_id -p $plate_id
+if [[ $format_broad_cmap == "YES" ]]; then 
+    opt="-d"
+else
+    opt=""
+fi
+
+./annotate.R -b $batch_id -p $plate_id $opt
 
 check_path exists $aggregated_with_metadata_archive_file
 
