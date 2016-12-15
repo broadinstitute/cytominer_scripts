@@ -1,13 +1,16 @@
 #!/usr/bin/env Rscript
 
-'usage: create_variable_selections.R -b <id> -i <file> -r <list> [-n <n>] [-s <query>] 
+'preselect
+
+Usage:
+  preselect.R -b <id> -i <file> -r <list> [-n <n>] [-s <query>] 
 
 options:
- -b <id>, --batch_id=<id> Batch ID
- -i <file>, --input=<file> test data on which to perform variable selection operations
- -n <n>, --replicates=<n> number of replicates selected per plate map in <file>
- -r <list> --operations=<list> comma-separated list of operations
- -s <query> --subset=<query> query to create the training data by subsetting' -> doc
+  -b <id> --batch_id=<id>          Batch ID
+  -i <file> --input=<file>         Test data on which to perform variable selection operations
+  -n <n> --replicates=<n>          Number of replicates selected per plate map in <file>
+  -r <list> --operations=<list>    Comma-separated list of operations
+  -s <query> --subset=<query>      Query to create the training data by subsetting' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 

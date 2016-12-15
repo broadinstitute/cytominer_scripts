@@ -1,12 +1,15 @@
 #!/usr/bin/env Rscript
 
-'usage: save_data -b <id> -f <pattern> [-n <n>] -o <file>
+'sample
 
-options:
--b <id>, --batch_id=<id> Batch ID
--f <pattern>, --pattern=<pattern> regular expression (only csv\'s)
--n <n>, --replicates=<n> number of replicates to select per plate map
--o <file>, --output=<file> output file (either csv or rds)' -> doc
+Usage:
+  sample -b <id> -f <pattern> [-n <n>] -o <file>
+
+Options:
+  -b <id> --batch_id=<id>               Batch ID
+  -f <pattern> --pattern=<pattern>      Regular expression (only csv\'s)
+  -n <n> --replicates=<n>               Number of replicates to select per plate map
+  -o <file> --output=<file>             Output file (either csv or rds)' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 

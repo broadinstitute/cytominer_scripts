@@ -1,12 +1,15 @@
 #!/usr/bin/env Rscript
 
-'usage: join_metadata.R -b <id> -p <id> [-d -j <file>]
+'annotate
 
-options:
- -b <id>, --batch_id=<id>   Batch ID
- -p <id>, --plate_id=<id>   Plate ID
- -d, --format_broad_cmap    Add columns to make compatible with Broad CMap naming conventions
- -j <file>, --external_metadata=<file>    external metadata to join with' -> doc
+Usage: 
+  annotate.R -b <id> -p <id> [-d -j <file>]
+
+Options:
+  -b <id>, --batch_id=<id>                 Batch ID
+  -p <id>, --plate_id=<id>                 Plate ID
+  -d, --format_broad_cmap                  Add columns to make compatible with Broad CMap naming conventions
+  -j <file>, --external_metadata=<file>    External metadata to join with' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 

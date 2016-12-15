@@ -1,11 +1,14 @@
 #!/usr/bin/env Rscript
 
-'usage: select_variables.R -b <id> -p <id> -r <list>
+'select
 
-options:
- -b <id>, --batch_id=<id> Batch ID
- -p <id>, --plate_id=<id> Plate ID
- -r <list> --filters=<list> comma-separated list of filters' -> doc
+Usage: 
+  select.R -b <id> -p <id> -r <list>
+
+Options:
+  -b <id> --batch_id=<id>       Batch ID
+  -p <id> --plate_id=<id>       Plate ID
+  -r <list> --filters=<list>    Comma-separated list of filters' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 
