@@ -7,7 +7,7 @@ Usage:
 
 Options:
   -h --help                     Show this screen.
-  -o <file> --output=<file>     per-well aggregated data' -> doc
+  -o <file> --output=<file>     per-well aggregated data.' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 

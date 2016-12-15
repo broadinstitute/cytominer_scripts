@@ -6,10 +6,10 @@ Usage:
   sample -b <id> -f <pattern> [-n <n>] -o <file>
 
 Options:
-  -b <id> --batch_id=<id>               Batch ID
-  -f <pattern> --pattern=<pattern>      Regular expression (only csv\'s)
-  -n <n> --replicates=<n>               Number of replicates to select per plate map
-  -o <file> --output=<file>             Output file (either csv or rds)' -> doc
+  -b <id> --batch_id=<id>               Batch ID.
+  -f <pattern> --pattern=<pattern>      Regular expression - only csv\'s.
+  -n <n> --replicates=<n>               Number of replicates to select per plate map.
+  -o <file> --output=<file>             Output file - either csv or rds.' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 
