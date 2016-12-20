@@ -42,6 +42,19 @@ filelist <- barcode_platemap %>%
   mutate(filename = normalizePath(paste0(backend_dir, "/", Assay_Plate_Barcode, "/", Assay_Plate_Barcode, suffix)))
 
 
+df <- lapply(filelist$filename, 
+    function(filename) {
+        if (file.exists(filename)) {
+            readr::read_csv(filename)
+        } else {
+            tibble::data_frame()
+        }
+    }) %>% 
+  bind_rows()
+
+
+print(dim(df))
+
 print(knitr::kable(filelist))
 
 # PLATES=`csvjoin -c Plate_Map_Name ../../metadata/${BATCH_ID}/barcode_platemap.csv <(printf "Plate_Map_Name\n${SET_ID}\n")|csvcut -c Assay_Plate_Barcode|tail -n +2|tr '\n' ' '`
