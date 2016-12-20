@@ -37,7 +37,7 @@ barcode_platemap <- readr::read_csv(paste0(metadata_dir, "/barcode_platemap.csv"
 
 filelist <- barcode_platemap %>%
   filter(Plate_Map_Name == plate_map_name) %>% 
-  mutate(filename = normalizePath(paste0(backend_dir, "/", Assay_Plate_Barcode, "/", Assay_Plate_Barcode, "/", suffix)))
+  mutate(filename = normalizePath(paste0(backend_dir, "/", Assay_Plate_Barcode, "/", Assay_Plate_Barcode, suffix)))
 
 
 print(knitr::kable(filelist))
