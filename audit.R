@@ -3,7 +3,7 @@
 'audit
 
 Usage: 
-  audit.R -b <id> -g <id> [-s <str>] -r <op>] [-t <dir>]
+  audit.R -b <id> -g <id> [-s <str>] [-r <op>] [-t <dir>]
 
 Options:
   -h --help                          Show this screen.
