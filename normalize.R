@@ -3,12 +3,13 @@
 'normalize
 
 Usage: 
-  normalize.R -b <id> -p <id> -s <query> [-r <op>] [-t <dir>]
+  normalize.R -b <id> -p <id> -s <query> [-c] [-r <op>] [-t <dir>]
 
 Options:
   -h --help                     Show this screen.
   -b <id> --batch_id=<id>       Batch ID.
   -p <id> --plate_id=<id>       Plate ID.
+  -c --sample_single_cell       Use single cell data for sampling, instead of per-well profiles.
   -r <op> --operation=<op>      Normalization operation [default: robustize].
   -s <query> --subset=<query>   Query to specify the sample for estimating normalization parameters.
   -t <dir> --tmpdir=<dir>       Temporary directory [default: /tmp]' -> doc
@@ -24,6 +25,8 @@ opts <- docopt(doc)
 # str(opts)
 
 batch_id <- opts[["batch_id"]]
+
+sample_single_cell <- opts[["sample_single_cell"]]
 
 plate_id <- opts[["plate_id"]]
 
@@ -70,10 +73,15 @@ load_single_cells <- function(metadata) {
     object
 }
 
-single_cells <- load_single_cells(metadata = metadata)
+if (sample_single_cell) {
+  sample <- load_single_cells(metadata = metadata)
 
-sample <- 
-    single_cells %>% 
+} else {
+  sample <- profiles
+
+}
+
+sample %<>% 
     filter_(subset) %>% 
     collect()
 
