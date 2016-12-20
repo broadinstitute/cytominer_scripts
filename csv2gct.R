@@ -3,7 +3,7 @@
 'csv2gct
 
 Usage: 
-  aggregate.R <csv_file> -o <file>
+  csv2gct.R <csv_file> -o <file>
 
 Options:
   -h --help                     Show this screen.
