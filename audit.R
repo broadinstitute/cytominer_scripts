@@ -33,7 +33,7 @@ backend_dir <- paste("../..", "backend", batch_id, sep = "/")
 
 metadata_dir <- paste("../..", "metadata", batch_id, sep = "/")
 
-barcode_platemap <- readr::read_csv(paste0(metadata_dir, "/barcode_platemap.csv"))
+barcode_platemap <- suppressMessages(readr::read_csv(paste0(metadata_dir, "/barcode_platemap.csv")))
 
 filelist <- barcode_platemap %>%
   filter(Plate_Map_Name == plate_map_name) %>% 
