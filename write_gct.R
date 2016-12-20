@@ -46,7 +46,7 @@ write_gct <- function(x, path) {
     tibble::data_frame(cp_feature_name = row.names(measurements)) %>%
     tidyr::separate(col = "cp_feature_name", 
                     into = c("compartment", "feature_group", "feature_name"), 
-                    sep = "_", extra = "merge"
+                    sep = "_", extra = "merge", remove = FALSE
     )
   
   column_annotations_df <- 
