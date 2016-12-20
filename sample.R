@@ -71,7 +71,7 @@ if (!is.null(replicates)) {
             unlist()
 }
 
-futile.logger::flog.info(sprintf("Reading %d files...:\n%s", length(file_list), paste(file_list, collapse=",")))
+futile.logger::flog.info(sprintf("Reading %d files...:\n%s", length(file_list), paste(file_list, collapse="\n")))
 
 df <- file_list %>% 
   lapply(function(x) suppressMessages(readr::read_csv(x))) %>%
