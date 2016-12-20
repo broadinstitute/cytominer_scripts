@@ -19,6 +19,12 @@ suppressWarnings(suppressMessages(library(dplyr)))
 
 suppressWarnings(suppressMessages(library(magrittr)))
 
+suppressWarnings(suppressMessages(library(foreach))
+
+suppressWarnings(suppressMessages(library(doParallel))
+
+doParallel::registerDoParallel(cores=detectCores())
+
 opts <- docopt(doc)
 
 batch_id <- opts[["batch_id"]]
