@@ -6,6 +6,7 @@ Usage:
   normalize.R -b <id> -p <id> -s <query> [-r <op>] [-t <dir>]
 
 Options:
+  -h --help                     Show this screen.
   -b <id> --batch_id=<id>       Batch ID.
   -p <id> --plate_id=<id>       Plate ID.
   -r <op> --operation=<op>      Normalization operation [default: robustize].

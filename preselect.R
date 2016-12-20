@@ -6,6 +6,7 @@ Usage:
   preselect.R -b <id> -i <file> -r <list> [-n <n>] [-s <query>] 
 
 options:
+  -h --help                        Show this screen.
   -b <id> --batch_id=<id>          Batch ID.
   -i <file> --input=<file>         Test data on which to perform variable selection operations.
   -n <n> --replicates=<n>          Number of replicates selected per plate map in <file>.

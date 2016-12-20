@@ -6,6 +6,7 @@ Usage:
   sample -b <id> -f <pattern> [-n <n>] -o <file>
 
 Options:
+  -h --help                             Show this screen.
   -b <id> --batch_id=<id>               Batch ID.
   -f <pattern> --pattern=<pattern>      Regular expression - only csv\'s.
   -n <n> --replicates=<n>               Number of replicates to select per plate map.
