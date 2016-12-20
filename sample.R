@@ -85,6 +85,9 @@ if (tools::file_ext(output) == "rds") {
 } else if (tools::file_ext(output) == "csv"){
     readr::write_csv(df, output)
 
+} else if (tools::file_ext(output) == "feather"){
+    feather::write_feather(df, output)
+
 } else {
     stop(paste0("Unsupported file extension: ", tools::file_ext(output)))
 

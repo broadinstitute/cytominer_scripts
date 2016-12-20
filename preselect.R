@@ -48,6 +48,9 @@ for (operation in operations) {
     } else if (tools::file_ext(input) == "csv"){
         df <- suppressMessages(readr::read_csv(input))
 
+    } else if (tools::file_ext(input) == "feather"){
+        df <- suppressMessages(feather::read_feather(input))
+
     } else {
         stop(paste0("Unsupported file extension: ", tools::file_ext(input)))
 
