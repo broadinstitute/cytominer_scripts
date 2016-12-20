@@ -39,7 +39,7 @@ for (operation in operations) {
     if (tools::file_ext(input) == "rds") {
         df <- readRDS(input)
 
-    } else if (tools::file_ext(output) == "csv"){
+    } else if (tools::file_ext(input) == "csv"){
         df <- readr::read_csv(input)
 
     } else {
