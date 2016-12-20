@@ -28,7 +28,7 @@ plate_map_name <- opts[["plate_map_name"]]
 
 operation <- opts[["operation"]]
 
-group_by <- opts[["group_by"]]
+group_by <- stringr::str_split(opts[["group_by"]], ",")[[1]]
 
 suffix <- opts[["suffix"]]
 
@@ -83,4 +83,10 @@ null_threshold <- df %>%
   magrittr::extract2("correlation") %>%
   quantile(0.95, na.rm = TRUE)
 
-print(sum(correlations > null_threshold) / length(correlations))
+result <- 
+  tibble::data_frame(null_threshold = null_threshold, 
+                     fraction_strong = (sum(correlations > null_threshold) / length(correlations)))
+
+knitr::kable(result)
+
+#summary(correlations)
