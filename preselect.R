@@ -40,7 +40,7 @@ for (operation in operations) {
         df <- readRDS(input)
 
     } else if (tools::file_ext(input) == "csv"){
-        df <- readr::read_csv(input)
+        df <- suppressMessages(readr::read_csv(input))
 
     } else {
         stop(paste0("Unsupported file extension: ", tools::file_ext(input)))
