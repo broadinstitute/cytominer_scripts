@@ -3,13 +3,14 @@
 'audit
 
 Usage: 
-  audit.R -b <id> -m <id> [-s <str>] [-r <op>] [-t <dir>]
+  audit.R -b <id> -m <id> [-p <var>] [-s <str>] [-r <op>] [-t <dir>]
 
 Options:
   -h --help                         Show this screen.
   -b <id> --batch_id=<id>           Batch ID.
   -m <id> --plate_map_name=<id>     Plate map name.
   -s <str> --suffix=<str>           Suffix to append to barcode to select a profile file [default: _normalized_variable_selected.csv]
+  -p <var> --group_by=<var>         Group by column [default: Metadata_Well].
   -r <op> --operation=<op>          Audit operation [default: replicate_quality].
   -t <dir> --tmpdir=<dir>           Temporary directory [default: /tmp]' -> doc
 
@@ -21,15 +22,15 @@ suppressWarnings(suppressMessages(library(magrittr)))
 
 opts <- docopt(doc)
 
-str(opts)
-
 batch_id <- opts[["batch_id"]]
 
 plate_map_name <- opts[["plate_map_name"]]
 
-suffix <- opts[["suffix"]]
-
 operation <- opts[["operation"]]
+
+group_by <- opts[["group_by"]]
+
+suffix <- opts[["suffix"]]
 
 backend_dir <- paste("../..", "backend", batch_id, sep = "/")
 
@@ -45,69 +46,41 @@ filelist <- barcode_platemap %>%
 df <- lapply(filelist$filename, 
     function(filename) {
         if (file.exists(filename)) {
-            readr::read_csv(filename)
+            suppressMessages(readr::read_csv(filename))
+
         } else {
             tibble::data_frame()
+
         }
     }) %>% 
   bind_rows()
 
+variables <-
+  colnames(df) %>%
+  stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
 
-print(dim(df))
+metadata <-
+  colnames(df) %>%
+  stringr::str_subset("^Metadata_")
 
-print(knitr::kable(filelist))
+stopifnot(group_by %in% metadata)
 
-# PLATES=`csvjoin -c Plate_Map_Name ../../metadata/${BATCH_ID}/barcode_platemap.csv <(printf "Plate_Map_Name\n${SET_ID}\n")|csvcut -c Assay_Plate_Barcode|tail -n +2|tr '\n' ' '`
+median_pairwise_correlation <- function(df, variables, group_by) {
+  df %>% 
+    dplyr::group_by_(.dots = group_by) %>% 
+    do(tibble::data_frame(correlation = median(cor(t(as.matrix(.[variables]))))))
+}
 
+set.seed(24)
 
-# df <- lapply(per_well_csv$flist %>% normalizePath(), readr::read_csv) %>% bind_rows()
+correlations <- df %>% 
+  median_pairwise_correlation(variables, group_by) %>%
+  magrittr::extract2("correlation")
 
+null_threshold <- df %>% 
+  mutate_(.dots = setNames(list(lazyeval::interp(~ sample(a), a = as.name(group_by))), group_by)) %>% 
+  median_pairwise_correlation(variables, group_by) %>% 
+  magrittr::extract2("correlation") %>%
+  quantile(0.95, na.rm = TRUE)
 
-
-# # rm(list = ls())
-# # library(dplyr)
-# # library(stringr)
-# # library(reshape2)
-# # library(htmlTable)
-# # source("rep.corr.func.R")
-
-# backend_dir <- paste("../..", "backend", batch_id, sep = "/")
-
-# file_list <- list.files(backend_dir, 
-#     pattern = pattern, 
-#     recursive = T, full.names = T) 
-
-
-# x <- readRDS("../results/master/2016-12-13_da3e6bfb/2016_04_01_a549_48hr_batch1_normalized.rds")
-
-# x <- cbind(x, data.frame(Metadata_Treatment = paste(x$Metadata_pert_id, x$Metadata_mg_per_ml, sep = "@")))
-
-# set.seed(24)
-
-# feats <- colnames(x)
-
-# feats <- feats[which(!str_detect(feats, "Metadata"))]
-
-# metadata <- colnames(x)
-
-# metadata <- metadata[which(str_detect(metadata, "Metadata"))]
-
-# thr <- non.rep.cor(list(data = x, feat_col = feats, factor_col = metadata), "Metadata_Treatment", feats)
-
-# u <- rep.cor(list(data = x, feat_col = feats, factor_col = metadata), "Metadata_Treatment", feats)
-
-# strong.trt <- u$Metadata_Treatment[which(u$cr > thr)]
-
-# sprintf("Hit ratio (compound-concentrations) : %f%%", round(length(strong.trt)/NROW(u) * 100))
-
-# strong.cmpd <- lapply(strong.trt, function(x) str_split(x, "@")[[1]][1]) %>% unlist %>% unique
-
-# all.cmpd <- lapply(u$Metadata_Treatment, function(x) str_split(x, "@")[[1]][1]) %>% unlist %>% unique
-
-# sprintf("Hit ratio (compounds) : %f%%", round(length(strong.cmpd)/length(all.cmpd) * 100))
-
-# x <- x %>% dplyr::filter(Metadata_Treatment %in% strong.trt)
-
-
-
-
+print(sum(correlations > null_threshold) / length(correlations))
