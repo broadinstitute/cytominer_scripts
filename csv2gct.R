@@ -21,8 +21,6 @@ csv_file <- opts[["csv_file"]]
 
 output <- opts[["output"]]
 
-str(opts)
-
 source("write_gct.R")
 
-readr::read_csv(csv_file) %>%  write_gct(output)
+suppressMessages(readr::read_csv(csv_file)) %>%  write_gct(output)
