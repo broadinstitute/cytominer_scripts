@@ -6,11 +6,11 @@ Usage:
   audit.R -b <id> -g <id> [-s <str>] [-r <op>] [-t <dir>]
 
 Options:
-  -h --help                          Show this screen.
-  -b <id> --batch_id=<id>            Batch ID.
-  -g <id> --plate_map_name=<id>      Plate map name.
+  -h       --help                    Show this screen.
+  -b <id>  --batch_id=<id>           Batch ID.
+  -m <id>  --plate_map_name=<id>     Plate map name.
   -s <str> --suffix=<str>            Suffix to append to barcode to select a profile file [default: _normalized_variable_selected.csv]
-  -r <op> --operation=<op>           Audit operation [default: replicate_quality].
+  -r <op>  --operation=<op>          Audit operation [default: replicate_quality].
   -t <dir> --tmpdir=<dir>            Temporary directory [default: /tmp]' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
