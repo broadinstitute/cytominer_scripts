@@ -38,9 +38,9 @@ variables_selected <-
 
 backend_dir <- paste("../..", "backend", batch_id, plate_id, sep = "/")
 
-profiles <- paste(backend_dir, paste0(plate_id, "_augmented.csv"), sep = "/")
+profiles <- paste(backend_dir, paste0(plate_id, "_normalized.csv"), sep = "/")
 
-profiles_variable_selected <- paste(backend_dir, paste0(plate_id, "_augmented_variable_selected.csv"), sep = "/")
+profiles_variable_selected <- paste(backend_dir, paste0(plate_id, "_normalized_variable_selected.csv"), sep = "/")
 
 df <- suppressMessages(readr::read_csv(profiles))
 
@@ -57,7 +57,7 @@ variables <- intersect(variables, variables_selected)
 testthat::expect_gt(length(variables), 0)
 
 df %<>% 
-    select_(.dots = c(metadata, variables))
+  select_(.dots = c(metadata, variables))
 
 df %>%
-    readr::write_csv(profiles_variable_selected)
+  readr::write_csv(profiles_variable_selected)
