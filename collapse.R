@@ -64,7 +64,7 @@ variables <-
 
 aggregated <-
   cytominer::aggregate(
-    population = df,
+    population = profiles,
     variables = variables,
     strata = c("Metadata_Plate", "Metadata_Well"),
     operation = "mean"
