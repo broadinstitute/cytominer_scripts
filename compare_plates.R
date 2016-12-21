@@ -49,10 +49,10 @@ filelist <- barcode_platemap %>%
   ))
 
 
-dir.create(paste0(output, "/", batch_id), showWarnings = FALSE)
+dir.create(paste0(output, "/", batch_id, "/", "compare_plates"), showWarnings = FALSE)
 
 group_file <-
-  paste0(output, "/", batch_id, "/", plate_map_name, ".grp")
+  paste0(output, "/", batch_id, "/", "compare_plates", "/", plate_map_name, ".grp")
 
 filelist %>% select(filename) %>% readr::write_tsv(group_file, col_names = FALSE)
 
