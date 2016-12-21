@@ -56,7 +56,7 @@ profiles <- lapply(filelist$filename,
             tibble::data_frame()
 
         }
-    })
+    }) %>% bind_rows()
 
 variables <-
   colnames(profiles) %>%
