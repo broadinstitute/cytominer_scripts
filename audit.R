@@ -3,12 +3,13 @@
 'audit
 
 Usage: 
-  audit.R -b <id> -m <id> [-p <var>] [-s <str>] [-r <op>] [-t <dir>]
+  audit.R -b <id> -m <id> -o <file> [-p <var>] [-s <str>] [-r <op>] [-t <dir>]
 
 Options:
   -h --help                         Show this screen.
   -b <id> --batch_id=<id>           Batch ID.
   -m <id> --plate_map_name=<id>     Plate map name.
+  -o <file> --output=<file>         Output CSV file
   -s <str> --suffix=<str>           Suffix to append to barcode to select a profile file [default: _normalized_variable_selected.csv]
   -p <var> --group_by=<var>         Group by column [default: Metadata_Well].
   -r <op> --operation=<op>          Audit operation [default: replicate_quality].
@@ -27,6 +28,8 @@ batch_id <- opts[["batch_id"]]
 plate_map_name <- opts[["plate_map_name"]]
 
 operation <- opts[["operation"]]
+
+output <- opts[["output"]]
 
 group_by <- stringr::str_split(opts[["group_by"]], ",")[[1]]
 
@@ -90,5 +93,7 @@ result <-
     fraction_strong = (sum(correlations > null_threshold) / length(correlations)))
 
 knitr::kable(result)
+
+result %>% readr::write_csv(output)
 
 #summary(correlations)
