@@ -59,9 +59,10 @@ filelist %>% select(filename) %>% readr::write_tsv(group_file, col_names = FALSE
 cmd <-
   sprintf(
     "matlab -nodesktop -nosplash -nojit -nodisplay -r \"cd /cmap/tools/jenkins/job_repos/espresso/cup/dunkin/compare_plates/; compare_plates(\'%s\', \'%s\', \'%s\', '--probe_display_field', 'cp_feature_name', '--sample_field', 'pert_well'); quit\"",
-    group_file,
-    paste0(output, "/", batch_id),
+    normalizePath(group_file),
+    normalizePath(paste0(output, "/", batch_id)),
     plate_map_name
   )
 
 print(cmd)
+system(cmd)
