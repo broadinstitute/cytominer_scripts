@@ -62,11 +62,14 @@ variables <-
   colnames(profiles) %>%
   stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
 
+metadata <- 
+  stringr::str_subset(names(profiles), "^Metadata_")
+
 aggregated <-
   cytominer::aggregate(
     population = profiles,
     variables = variables,
-    strata = c("Metadata_Plate", "Metadata_Well"),
+    strata = setdiff(metadata, c("Metadata_Plate", "Metadata_Assay_Plate_Barcode")),
     operation = "mean"
   )
 
