@@ -47,7 +47,7 @@ filelist <- barcode_platemap %>%
     )
   ))
 
-df <- lapply(filelist$filename, 
+profiles <- lapply(filelist$filename, 
     function(filename) {
         if (file.exists(filename)) {
             suppressMessages(readr::read_csv(filename))
@@ -58,4 +58,16 @@ df <- lapply(filelist$filename,
         }
     })
 
+variables <-
+  colnames(profiles) %>%
+  stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
 
+aggregated <-
+  cytominer::aggregate(
+    population = df,
+    variables = variables,
+    strata = c("Metadata_Plate", "Metadata_Well"),
+    operation = "mean"
+  )
+
+aggregated %>% readr::write_csv(output)
