@@ -79,13 +79,15 @@ correlations <- df %>%
 
 null_threshold <- df %>% 
   mutate_(.dots = setNames(list(lazyeval::interp(~ sample(a), a = as.name(group_by))), group_by)) %>% 
-  median_pairwise_correlation(variables, group_by) %>% 
+  median_pairwise_correlation(variables, group_by) %>%
   magrittr::extract2("correlation") %>%
   quantile(0.95, na.rm = TRUE)
 
 result <- 
-  tibble::data_frame(null_threshold = null_threshold, 
-                     fraction_strong = (sum(correlations > null_threshold) / length(correlations)))
+  tibble::data_frame(
+    plate_map_name = plate_map_name,
+    null_threshold = null_threshold,
+    fraction_strong = (sum(correlations > null_threshold) / length(correlations)))
 
 knitr::kable(result)
 
