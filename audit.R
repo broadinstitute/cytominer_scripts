@@ -62,9 +62,15 @@ df <- lapply(filelist$filename,
   bind_rows()
 
 if (!is.null(subset)) {
-    df %<>% filter_(subset)
+  df %<>% filter_(subset)
+
+  futile.logger::flog.info(sprintf("%d profiles retained after filtering.", nrow(df)))
+
+} else {
+  futile.logger::flog.info("No filter")
 
 }
+
 
 variables <-
   colnames(df) %>%
