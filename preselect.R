@@ -39,7 +39,7 @@ subset <- opts[["subset"]] #"Metadata_broad_sample_type == '''control'''"
 
 operations <- stringr::str_split(operations, ",")[[1]]
 
-dir.create(paste0("../../parameters/", batch_id, "/variable_selection/"), recursive = TRUE)
+dir.create(paste0("../../parameters/", batch_id, "/variable_selection/"), recursive = TRUE, showWarnings = FALSE)
 
 for (operation in operations) {
     variable_selections_file <- paste0("../../parameters/", batch_id, "/variable_selection/", operation, ".txt" )
