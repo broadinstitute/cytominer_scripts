@@ -3,13 +3,14 @@
 'annotate
 
 Usage: 
-  annotate.R -b <id> -p <id> [-d -j <file>]
+  annotate.R -b <id> -p <id> [-d -j <file> -m <str>]
 
 Options:
   -b <id> --batch_id=<id>                 Batch ID.
   -p <id> --plate_id=<id>                 Plate ID.
   -d --format_broad_cmap                  Add columns to make compatible with Broad CMap naming conventions.
-  -j <file> --external_metadata=<file>    External metadata to join with.' -> doc
+  -j <file> --external_metadata=<file>    External metadata to join with.
+  -m <str> --perturbation_mode=<str>      Mode of perturbation - chemical or genetic [default: chemical]' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 
@@ -26,6 +27,8 @@ external_metadata <- opts[["external_metadata"]]
 format_broad_cmap <- opts[["format_broad_cmap"]]
 
 plate_id <- opts[["plate_id"]]
+
+perturbation_mode <- opts[["perturbation_mode"]]
 
 metadata_dir <- paste("../..", "metadata", batch_id, sep = "/")
 
@@ -79,12 +82,19 @@ if (format_broad_cmap) {
                Metadata_pert_well = Metadata_Well,
                Metadata_pert_id_vendor = "")
     
-    profiles %<>% 
-        mutate(Metadata_broad_sample_type = ifelse(is.na(Metadata_broad_sample), "control", "trt"),
-               Metadata_broad_sample = ifelse(Metadata_broad_sample_type =="control", "DMSO", Metadata_broad_sample),
-               Metadata_mg_per_ml = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mg_per_ml),
-               Metadata_mmoles_per_liter = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mmoles_per_liter),
-               Metadata_pert_vehicle = Metadata_solvent)
+    if (perturbation_mode == "chemical") {
+      profiles %<>% 
+          mutate(Metadata_broad_sample_type = ifelse(is.na(Metadata_broad_sample), "control", "trt"),
+                 Metadata_broad_sample = ifelse(Metadata_broad_sample_type =="control", "DMSO", Metadata_broad_sample),
+                 Metadata_mg_per_ml = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mg_per_ml),
+                 Metadata_mmoles_per_liter = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mmoles_per_liter),
+                 Metadata_pert_vehicle = Metadata_solvent)      
+    }
+
+    if (perturbation_mode == "genetic") {
+      profiles %<>% 
+          mutate(Metadata_broad_sample_type = ifelse(Metadata_broad_sample == "EMPTY", "control", "trt"),    
+    }
 }
 
 
