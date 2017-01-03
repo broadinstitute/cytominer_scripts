@@ -74,17 +74,20 @@ profiles %<>% inner_join(platemap, by = c("Metadata_well_position"))
 
 if (format_broad_cmap) {
     profiles %<>% 
+        mutate(Metadata_pert_id = stringr::str_extract(Metadata_broad_sample, "(BRD-[A-Z0-9]+)"),
+               Metadata_pert_mfc_id = Metadata_broad_sample,
+               Metadata_pert_well = Metadata_Well,
+               Metadata_pert_id_vendor = "")
+    
+    profiles %<>% 
         mutate(Metadata_broad_sample_type = ifelse(is.na(Metadata_broad_sample), "control", "trt"),
                Metadata_broad_sample = ifelse(Metadata_broad_sample_type =="control", "DMSO", Metadata_broad_sample),
                Metadata_mg_per_ml = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mg_per_ml),
                Metadata_mmoles_per_liter = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mmoles_per_liter),
-               Metadata_pert_id = stringr::str_extract(Metadata_broad_sample, "(BRD-[A-Z0-9]+)"),
-               Metadata_pert_mfc_id = Metadata_broad_sample,
-               Metadata_pert_well = Metadata_Well,
-               Metadata_pert_vehicle = Metadata_solvent,
-               Metadata_pert_idose = Metadata_mmoles_per_liter,
-               Metadata_pert_id_vendor = "")
+               Metadata_pert_vehicle = Metadata_solvent)
 }
+
+
 
 # external_metadata
 
