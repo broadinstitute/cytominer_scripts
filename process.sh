@@ -91,6 +91,10 @@ case $key in
     plate_id="$2"
     shift
     ;;
+    -m|--perturbation_mode)
+    perturbation_mode="$2"
+    shift
+    ;;
     -t|--tmpdir)
     tmp_dir="$2"
     shift
@@ -110,6 +114,8 @@ tmp_dir="${tmp_dir:-/tmp}"
 pipeline="${pipeline:-analysis}"
 
 format_broad_cmap="${format_broad_cmap:-NO}"
+
+perturbation_mode="${perturbation_mode:-chemical}"
 
 for var in batch_id pipeline plate_id tmp_dir;
 do 
@@ -176,7 +182,8 @@ else
     
 fi
 
-./annotate.R -b $batch_id -p $plate_id $opt
-
+set -x 
+./annotate.R -b $batch_id -p $plate_id $opt -m $perturbation_mode
+set +x
 check_path exists $aggregated_with_metadata_archive_file
 
