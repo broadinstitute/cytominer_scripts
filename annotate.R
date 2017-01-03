@@ -59,7 +59,9 @@ platemap <- suppressMessages(readr::read_tsv(paste(metadata_dir, "platemap", pas
 
 testthat::expect_true("well_position" %in% colnames(platemap))
 
-platemap %<>% select(-plate_map_name)
+if ('plate_map_name' %in% colnames(platemap)) {
+   platemap %<>% select(-plate_map_name)
+}
 
 platemap %<>% setNames(names(platemap) %>% stringr::str_replace_all("^", "Metadata_"))
 
@@ -69,6 +71,7 @@ profiles %<>% inner_join(platemap, by = c("Metadata_well_position"))
 
 # format_broad_cmap
 # TODO: add Metadata_cell_id Metadata_pert_type
+
 if (format_broad_cmap) {
     profiles %<>% 
         mutate(Metadata_broad_sample_type = ifelse(is.na(Metadata_broad_sample), "control", "trt"),
@@ -84,10 +87,11 @@ if (format_broad_cmap) {
 }
 
 # external_metadata
+
 if(!is.null(external_metadata)) {
     external_metadata_df <- suppressMessages(readr::read_csv(external_metadata))
 
-    # Check whether the columns have "Metadata" prefix; if not, assume that all columsn need the suffix
+    # Check whether the columns have "Metadata" prefix; if not, assume that all columns need the suffix
     if (length(grep("Metadata_", colnames(external_metadata_df))) == 0) {
         external_metadata_df %<>% setNames(names(external_metadata_df) %>% stringr::str_replace_all("^", "Metadata_"))
 
