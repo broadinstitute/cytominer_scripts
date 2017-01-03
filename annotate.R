@@ -93,7 +93,7 @@ if (format_broad_cmap) {
 
     if (perturbation_mode == "genetic") {
       profiles %<>% 
-          mutate(Metadata_broad_sample_type = ifelse(Metadata_broad_sample == "EMPTY", "control", "trt"),    
+          mutate(Metadata_broad_sample_type = ifelse(Metadata_broad_sample == "EMPTY", "control", "trt")
     }
 }
 
