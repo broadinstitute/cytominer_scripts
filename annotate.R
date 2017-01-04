@@ -76,7 +76,6 @@ profiles %<>% mutate(Metadata_well_position = Metadata_Well)
 profiles %<>% inner_join(platemap, by = c("Metadata_well_position"))
 
 # format_broad_cmap
-# TODO: add Metadata_cell_id Metadata_pert_type
 
 if (format_broad_cmap) {
     profiles %<>% 
@@ -125,6 +124,7 @@ if(!is.null(external_metadata)) {
 
 
 # format_broad_cmap: columns that may be added after joining with external metadata
+
 if (format_broad_cmap) {
 
     if ("Metadata_pert_iname" %in% colnames(profiles)) {
@@ -134,7 +134,6 @@ if (format_broad_cmap) {
     }
 
 }
-
 
 # save 
 
