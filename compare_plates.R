@@ -60,9 +60,8 @@ cmd <-
   sprintf(
     "matlab -nodesktop -nosplash -nojit -nodisplay -r \"cd /cmap/tools/jenkins/job_repos/espresso/cup/dunkin/compare_plates/; compare_plates(\'%s\', \'%s\', \'%s\', '--probe_display_field', 'cp_feature_name', '--sample_field', 'pert_well'); quit\"",
     normalizePath(group_file),
-    normalizePath(paste0(output, "/", batch_id)),
+    normalizePath(paste0(output, "/", batch_id, "/", "compare_plates")),
     plate_map_name
   )
 
-print(cmd)
 system(cmd)
