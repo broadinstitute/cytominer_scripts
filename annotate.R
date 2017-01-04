@@ -3,11 +3,12 @@
 'annotate
 
 Usage: 
-  annotate.R -b <id> -p <id> [-d -j <file> -m <str>]
+  annotate.R -b <id> -p <id> [-c <str> -d -j <file> -m <str>]
 
 Options:
   -b <id> --batch_id=<id>                 Batch ID.
   -p <id> --plate_id=<id>                 Plate ID.
+  -c <str> --cell_id=<str>                Cell ID [default: unknown]
   -d --format_broad_cmap                  Add columns to make compatible with Broad CMap naming conventions.
   -j <file> --external_metadata=<file>    External metadata to join with.
   -m <str> --perturbation_mode=<str>      Mode of perturbation - chemical or genetic [default: chemical]' -> doc
@@ -23,6 +24,8 @@ opts <- docopt(doc)
 batch_id <- opts[["batch_id"]]
 
 external_metadata <- opts[["external_metadata"]]
+
+cell_id <- opts[["cell_id"]]
 
 format_broad_cmap <- opts[["format_broad_cmap"]]
 
@@ -80,7 +83,8 @@ if (format_broad_cmap) {
         mutate(Metadata_pert_id = stringr::str_extract(Metadata_broad_sample, "(BRD-[A-Z0-9]+)"),
                Metadata_pert_mfc_id = Metadata_broad_sample,
                Metadata_pert_well = Metadata_Well,
-               Metadata_pert_id_vendor = "")
+               Metadata_pert_id_vendor = "",
+               Metadata_cell_id = cell_id)
     
     if (perturbation_mode == "chemical") {
       profiles %<>% 
@@ -95,9 +99,11 @@ if (format_broad_cmap) {
       profiles %<>% 
           mutate(Metadata_broad_sample_type = ifelse(Metadata_pert_name == "EMPTY", "control", "trt"))
     }
+
+    profiles %<>% 
+        mutate(Metadata_pert_type = Metadata_broad_sample_type)
+
 }
-
-
 
 # external_metadata
 
