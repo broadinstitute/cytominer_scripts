@@ -9,12 +9,12 @@ Options:
   -h --help                         Show this screen.
   -b <id> --batch_id=<id>           Batch ID.
   -m <id> --plate_map_name=<id>     Plate map name.
-  -o <file> --output=<file>         Output CSV file
-  -s <query> --subset=<query>       Query to specify the sample for doing the audit
+  -o <file> --output=<file>         Output CSV file.
+  -s <query> --subset=<query>       Query to specify the sample for doing the audit.
   -f <str> --suffix=<str>           Suffix to append to barcode to select a profile file [default: _normalized_variable_selected.csv]
   -p <var> --group_by=<var>         Group by column [default: Metadata_Well].
   -r <op> --operation=<op>          Audit operation [default: replicate_quality].
-  -t <dir> --tmpdir=<dir>           Temporary directory [default: /tmp]' -> doc
+  -t <dir> --tmpdir=<dir>           Temporary directory [default: /tmp].' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 
@@ -70,7 +70,6 @@ if (!is.null(subset)) {
   futile.logger::flog.info("No filter")
 
 }
-
 
 variables <-
   colnames(df) %>%
