@@ -91,16 +91,9 @@ case $key in
     plate_id="$2"
     shift
     ;;
-    -m|--perturbation_mode)
-    perturbation_mode="$2"
-    shift
-    ;;
     -t|--tmpdir)
     tmp_dir="$2"
     shift
-    ;;
-    -d|--format_broad_cmap)
-    format_broad_cmap=YES
     ;;
     *)
     echo Unknown option $key
@@ -140,8 +133,6 @@ backend_archive_file=${backend_archive_dir}/${plate_id}.sqlite
 
 aggregated_archive_file=${backend_archive_dir}/${plate_id}.csv
 
-aggregated_with_metadata_archive_file=${backend_archive_dir}/${plate_id}_augmented.csv
-
 if [[ (! -e $backend_archive_file) || (! -e $aggregated_archive_file) ]]; then
 
     backend_dir=$(create_and_check_dir $backend_dir)
@@ -172,18 +163,5 @@ else
 
 fi
 
-# join with metadata
 
-if [[ $format_broad_cmap == "YES" ]]; then 
-    opt="-d"
-
-else
-    opt=""
-    
-fi
-
-set -x 
-./annotate.R -b $batch_id -p $plate_id $opt -m $perturbation_mode
-set +x
-check_path exists $aggregated_with_metadata_archive_file
 
