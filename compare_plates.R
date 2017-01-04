@@ -49,7 +49,7 @@ filelist <- barcode_platemap %>%
   ))
 
 
-dir.create(paste0(output, "/", batch_id, "/", "compare_plates"), showWarnings = FALSE)
+dir.create(paste0(output, "/", batch_id, "/", "compare_plates"), showWarnings = FALSE, recursive = TRUE)
 
 group_file <-
   paste0(output, "/", batch_id, "/", "compare_plates", "/", plate_map_name, ".grp")
