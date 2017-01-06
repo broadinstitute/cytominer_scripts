@@ -130,7 +130,7 @@ if (format_broad_cmap) {
     if ("Metadata_pert_iname" %in% colnames(profiles)) {
         profiles %<>% 
             mutate(Metadata_pert_mfc_desc = Metadata_pert_iname,
-            mutate(Metadata_pert_name = Metadata_pert_iname)
+                   Metadata_pert_name = Metadata_pert_iname)
 
     }
 
