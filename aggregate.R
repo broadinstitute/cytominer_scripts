@@ -22,7 +22,7 @@ opts <- docopt(doc)
 db <- src_sqlite(path = opts[["sqlite_file"]])
 
 image <- tbl(src = db, "image") %>% 
-  select(TableNumber, ImageNumber, Image_Metadata_Plate, Image_Metadata_Well)
+  select(TableNumber, ImageNumber, Image_Metadata_Plate, Image_Metadata_Well) 
 
 aggregate_object <- function(compartment) {
   object <- tbl(src = db, compartment)
@@ -35,28 +35,23 @@ aggregate_object <- function(compartment) {
 
   feature_cols <- colnames(object) %>% stringr::str_subset(compartment_tag)
 
+  futile.logger::flog.info(str_c("Started aggregating ", compartment))
+
   cytominer::aggregate(
     population = object,
     variables = feature_cols,
     strata = c("Image_Metadata_Plate", "Image_Metadata_Well"),
     operation = "median"
-  )
+  ) %>% collect()
 
 }
 
-object <-
+aggregated <-
   aggregate_object("cells") %>%
-  inner_join(aggregate_object("cells"),
+  inner_join(aggregate_object("cytoplasm"),
              by = c("Image_Metadata_Plate", "Image_Metadata_Well")) %>%
   inner_join(aggregate_object("nuclei"),
              by = c("Image_Metadata_Plate", "Image_Metadata_Well")) 
-
-
-futile.logger::flog.info("Started collecting aggregated")
-
-aggregated %<>% collect()
-
-futile.logger::flog.info("Finished collecting aggregated")
 
 futile.logger::flog.info(paste0("Writing aggregated to ", opts[["output"]]))
 
