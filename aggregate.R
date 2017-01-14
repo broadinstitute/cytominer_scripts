@@ -24,7 +24,7 @@ db <- src_sqlite(path = opts[["sqlite_file"]])
 image <- tbl(src = db, "image") %>% 
   select(TableNumber, ImageNumber, Image_Metadata_Plate, Image_Metadata_Well) 
 
-aggregate_object <- function(compartment) {
+aggregate_objects <- function(compartment) {
   object <- tbl(src = db, compartment)
 
   object %<>% inner_join(image, by = c("TableNumber", "ImageNumber"))
@@ -33,13 +33,13 @@ aggregate_object <- function(compartment) {
   compartment_tag <- 
     str_c("^", str_sub(compartment, 1, 1) %>% str_to_upper(), str_sub(compartment, 2), "_")
 
-  feature_cols <- colnames(object) %>% stringr::str_subset(compartment_tag)
+  variables <- colnames(object) %>% stringr::str_subset(compartment_tag)
 
   futile.logger::flog.info(str_c("Started aggregating ", compartment))
 
   cytominer::aggregate(
     population = object,
-    variables = feature_cols,
+    variables = variables,
     strata = c("Image_Metadata_Plate", "Image_Metadata_Well"),
     operation = "median"
   ) %>% collect()
@@ -47,10 +47,10 @@ aggregate_object <- function(compartment) {
 }
 
 aggregated <-
-  aggregate_object("cells") %>%
-  inner_join(aggregate_object("cytoplasm"),
+  aggregate_objects("cells") %>%
+  inner_join(aggregate_objects("cytoplasm"),
              by = c("Image_Metadata_Plate", "Image_Metadata_Well")) %>%
-  inner_join(aggregate_object("nuclei"),
+  inner_join(aggregate_objects("nuclei"),
              by = c("Image_Metadata_Plate", "Image_Metadata_Well")) 
 
 futile.logger::flog.info(paste0("Writing aggregated to ", opts[["output"]]))
