@@ -15,27 +15,26 @@ suppressWarnings(suppressMessages(library(dplyr)))
 
 suppressWarnings(suppressMessages(library(magrittr)))
 
+suppressWarnings(suppressMessages(library(stringr)))
+
 opts <- docopt(doc)
 
-db <- dplyr::src_sqlite(path = opts[["sqlite_file"]])
+db <- src_sqlite(path = opts[["sqlite_file"]])
 
-image <- dplyr::tbl(src = db, "image") %>% 
-  dplyr::select(TableNumber, ImageNumber, Image_Metadata_Plate, Image_Metadata_Well)
+image <- tbl(src = db, "image") %>% 
+  select(TableNumber, ImageNumber, Image_Metadata_Plate, Image_Metadata_Well)
 
-object <-
-  dplyr::tbl(src = db, "cells") %>%
-  dplyr::inner_join(dplyr::tbl(src = db, "cytoplasm"),
-                    by = c("TableNumber", "ImageNumber", "ObjectNumber")) %>%
-  dplyr::inner_join(dplyr::tbl(src = db, "nuclei"),
-                    by = c("TableNumber", "ImageNumber", "ObjectNumber"))
+aggregate_object <- function(compartment) {
+  object <- tbl(src = db, compartment)
 
-object %<>% dplyr::inner_join(image, by = c("TableNumber", "ImageNumber"))
+  object %<>% inner_join(image, by = c("TableNumber", "ImageNumber"))
 
-feature_cols <-
-  colnames(object) %>%
-  stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
+  # compartment tag converts nuclei to ^Nuclei_
+  compartment_tag <- 
+    str_c("^", str_sub(compartment, 1, 1) %>% str_to_upper(), str_sub(compartment, 2), "_")
 
-aggregated <-
+  feature_cols <- colnames(object) %>% stringr::str_subset(compartment_tag)
+
   cytominer::aggregate(
     population = object,
     variables = feature_cols,
@@ -43,13 +42,19 @@ aggregated <-
     operation = "median"
   )
 
-futile.logger::flog.info("Started checking aggregated")
+}
 
-futile.logger::flog.info("Finished checking aggregated")
+object <-
+  aggregate_object("cells") %>%
+  inner_join(aggregate_object("cells"),
+             by = c("Image_Metadata_Plate", "Image_Metadata_Well")) %>%
+  inner_join(aggregate_object("nuclei"),
+             by = c("Image_Metadata_Plate", "Image_Metadata_Well")) 
+
 
 futile.logger::flog.info("Started collecting aggregated")
 
-aggregated %<>% dplyr::collect()
+aggregated %<>% collect()
 
 futile.logger::flog.info("Finished collecting aggregated")
 
