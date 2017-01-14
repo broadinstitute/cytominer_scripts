@@ -20,9 +20,9 @@ suppressWarnings(suppressMessages(library(dplyr)))
 
 suppressWarnings(suppressMessages(library(magrittr)))
 
-opts <- docopt(doc)
+suppressWarnings(suppressMessages(library(stringr)))
 
-# str(opts)
+opts <- docopt(doc)
 
 batch_id <- opts[["batch_id"]]
 
@@ -32,71 +32,94 @@ plate_id <- opts[["plate_id"]]
 
 operation <- opts[["operation"]]
 
-subset <- opts[["subset"]] #"Metadata_broad_sample_type == '''control'''"
+subset <- opts[["subset"]] # e.g. "Metadata_broad_sample_type == '''control'''"
 
 backend_dir <- paste("../..", "backend", batch_id, plate_id, sep = "/")
 
+# load profiles
 profiles <- suppressMessages(readr::read_csv(paste(backend_dir, paste0(plate_id, "_augmented.csv"), sep = "/")))
 
-metadata <- 
+# prepare to load objects by loading image table
+if(sample_single_cell) {
+  path <- paste(backend_dir, paste0(plate_id, ".sqlite"), sep = "/")
+
+  # TODO: if file doesn't exist at path then copy it from S3 to a tmpdir
+  if (!file.exists(path)) {
+    stop(paste0(path, " does not exist"))
+  }
+
+  db <- src_sqlite(path = path)
+
+  # get metadata and copy to db
+  metadata <- 
     profiles %>% 
     select(matches("Metadata_")) %>%
     distinct()
 
-load_single_cells <- function(metadata) {
-    path <- paste(backend_dir, paste0(plate_id, ".sqlite"), sep = "/")
+  metadata <- copy_to(db, metadata)
 
-    # TODO: if file doesn't exist at path then copy it from S3 to a tmpdir
-    if (!file.exists(path)) {
-        stop(paste0(path, " does not exist"))
-    }
-
-    db <- src_sqlite(path = path)
-
-    metadata <- dplyr::copy_to(db, metadata)
-
-    image <- dplyr::tbl(src = db, "image") %>% 
-      select(TableNumber, ImageNumber, Image_Metadata_Plate, Image_Metadata_Well) %>%
-      rename(Metadata_Plate = Image_Metadata_Plate,
-             Metadata_Well = Image_Metadata_Well) %>%
-      inner_join(metadata, by = c("Metadata_Plate", "Metadata_Well"))
-
-    object <-
-      tbl(src = db, "cells") %>%
-      inner_join(dplyr::tbl(src = db, "cytoplasm"),
-                 by = c("TableNumber", "ImageNumber", "ObjectNumber")) %>%
-      inner_join(dplyr::tbl(src = db, "nuclei"),
-                 by = c("TableNumber", "ImageNumber", "ObjectNumber"))
-
-    object %<>% inner_join(image, by = c("TableNumber", "ImageNumber"))
-
-    object
-}
-
-if (sample_single_cell) {
-  sample <- load_single_cells(metadata = metadata)
-
-} else {
-  sample <- profiles
+  image <- tbl(src = db, "image") %>% 
+    select(TableNumber, ImageNumber, Image_Metadata_Plate, Image_Metadata_Well) %>%
+    rename(Metadata_Plate = Image_Metadata_Plate,
+           Metadata_Well = Image_Metadata_Well) %>%
+    inner_join(metadata, by = c("Metadata_Plate", "Metadata_Well"))
 
 }
 
-sample %<>% 
+
+# compartment tag converts nuclei to ^Nuclei_
+compartment_tag <- function(compartment) {
+  str_c("^", str_sub(compartment, 1, 1) %>% str_to_upper(), str_sub(compartment, 2), "_")
+
+}
+
+load_objects <- function(compartment) {
+  tbl(src = db, compartment) %>% 
+    inner_join(image, by = c("TableNumber", "ImageNumber"))
+
+}
+
+load_profiles <- function(compartment) {
+  profiles %>% 
+    select(matches(str_c("Metadata_", "|", compartment_tag(compartment))))
+
+}
+
+normalize_profiles <- function(compartment) {
+  if (sample_single_cell) {
+    sample <- load_objects(compartment = compartment)
+
+  } else {
+    sample <- load_profiles(compartment = compartment)
+
+  }
+
+  sample %<>% 
     filter_(subset) %>% 
     collect()
 
-variables <-
-  colnames(profiles) %>%
-  stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
+  variables <- colnames(sample) %>% str_subset(compartment_tag(compartment))
+
+  normalized <-
+    cytominer::normalize(
+      population = load_profiles(compartment = compartment),
+      variables = variables,
+      strata =  c("Metadata_Plate"),
+      sample = sample,
+      operation = operation
+    )
+
+}
+
+metadata <- 
+  colnames(profiles) %>% str_subset("^Metadata_")
 
 normalized <-
-  cytominer::normalize(
-    population = profiles,
-    variables = variables,
-    strata =  c("Metadata_Plate"),
-    sample = sample,
-    operation = operation
-  )
+  normalize_profiles("cells") %>%
+  inner_join(normalize_profiles("cytoplasm"),
+             by = metadata) %>%
+  inner_join(normalize_profiles("nuclei"),
+             by = metadata) 
 
 normalized %>% readr::write_csv(paste(backend_dir, paste0(plate_id, "_normalized.csv"), sep = "/"))
 
