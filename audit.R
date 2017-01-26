@@ -3,18 +3,19 @@
 'audit
 
 Usage: 
-  audit.R -b <id> -m <id> -o <file> [-s <query>] [-p <var>] [-f <str>] [-r <op>] [-t <dir>]
+  audit.R -b <id> -m <id> -o <file> [-l <file>] [-s <query>] [-p <var>] [-f <str>] [-r <op>] [-t <dir>]
 
 Options:
-  -h --help                         Show this screen.
-  -b <id> --batch_id=<id>           Batch ID.
-  -m <id> --plate_map_name=<id>     Plate map name.
-  -o <file> --output=<file>         Output CSV file.
-  -s <query> --subset=<query>       Query to specify the sample for doing the audit.
-  -f <str> --suffix=<str>           Suffix to append to barcode to select a profile file [default: _normalized_variable_selected.csv]
-  -p <var> --group_by=<var>         Group by column [default: Metadata_Well].
-  -r <op> --operation=<op>          Audit operation [default: replicate_quality].
-  -t <dir> --tmpdir=<dir>           Temporary directory [default: /tmp].' -> doc
+  -h --help                          Show this screen.
+  -b <id> --batch_id=<id>            Batch ID.
+  -m <id> --plate_map_name=<id>      Plate map name.
+  -o <file> --output=<file>          Output CSV file (audit summarized across all groups).
+  -l <file> --output_detailed=<file> Output CSV file (audit per group).
+  -s <query> --subset=<query>        Query to specify the sample for doing the audit.
+  -f <str> --suffix=<str>            Suffix to append to barcode to select a profile file [default: _normalized_variable_selected.csv]
+  -p <var> --group_by=<var>          Group by column [default: Metadata_Well].
+  -r <op> --operation=<op>           Audit operation [default: replicate_quality].
+  -t <dir> --tmpdir=<dir>            Temporary directory [default: /tmp].' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 
@@ -31,6 +32,8 @@ plate_map_name <- opts[["plate_map_name"]]
 operation <- opts[["operation"]]
 
 output <- opts[["output"]]
+
+output_detailed <- opts[["output_detailed"]]
 
 group_by <- stringr::str_split(opts[["group_by"]], ",")[[1]]
 
@@ -90,12 +93,12 @@ median_pairwise_correlation <- function(df, variables, group_by) {
 set.seed(24)
 
 correlations <- df %>% 
-  median_pairwise_correlation(variables, group_by) %>%
-  magrittr::extract2("correlation")
+  median_pairwise_correlation(variables, group_by) 
 
 null_threshold <- df %>% 
-  mutate_(.dots = setNames(list(lazyeval::interp(~ sample(a), a = as.name(group_by))), group_by)) %>% 
-  median_pairwise_correlation(variables, group_by) %>%
+  tidyr::unite_("group_by", group_by) %>%
+  mutate(group_by = sample(group_by)) %>% 
+  median_pairwise_correlation(variables, "group_by") %>%
   magrittr::extract2("correlation") %>%
   quantile(0.95, na.rm = TRUE)
 
@@ -103,10 +106,17 @@ result <-
   tibble::data_frame(
     plate_map_name = plate_map_name,
     null_threshold = null_threshold,
-    fraction_strong = (sum(correlations > null_threshold) / length(correlations)))
+    fraction_strong = (sum(correlations$correlation > null_threshold) / nrow(correlations)))
 
 knitr::kable(result)
 
 result %>% readr::write_csv(output)
 
+if (!is.null(output_detailed)) {
+
+  knitr::kable(correlations)
+
+  correlations %>% readr::write_csv(output_detailed)
+
+}
 #summary(correlations)
