@@ -18,6 +18,8 @@ suppressWarnings(suppressMessages(library(dplyr)))
 
 suppressWarnings(suppressMessages(library(magrittr)))
 
+suppressWarnings(suppressMessages(library(readr)))
+
 opts <- docopt(doc)
 
 batch_id <- opts[["batch_id"]]
