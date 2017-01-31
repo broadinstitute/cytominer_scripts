@@ -48,7 +48,9 @@ if (!is.null(replicates)) {
 
     # create a plate_list based on number of replicates to be selected
     plate_list <- 
-        suppressMessages(readr::read_csv(paste(metadata_dir, "barcode_platemap.csv", sep = "/"))) %>%
+        suppressMessages(readr::read_csv(paste(metadata_dir, "barcode_platemap.csv", sep = "/"),
+                                        col_types = cols(Assay_Plate_Barcode = col_character(), 
+                                                         Plate_Map_Name = col_character()))) %>%
         select(Assay_Plate_Barcode, Plate_Map_Name) %>%
         inner_join(plate_list_retrieved, by = "Assay_Plate_Barcode") %>%
         group_by(Plate_Map_Name) %>% 
