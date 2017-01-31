@@ -45,7 +45,9 @@ profiles %<>% setNames(names(profiles) %>% stringr::str_replace_all("^Image_Meta
 
 # read and join metadata map
 
-metadata_map <- suppressMessages(readr::read_csv(paste(metadata_dir, "barcode_platemap.csv", sep = "/")))
+metadata_map <- suppressMessages(readr::read_csv(paste(metadata_dir, "barcode_platemap.csv", sep = "/"),
+                                                col_types = cols(Assay_Plate_Barcode = col_character(), 
+                                                                 Plate_Map_Name = col_character())))
 
 testthat::expect_true("Assay_Plate_Barcode" %in% colnames(metadata_map))
 
