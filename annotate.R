@@ -55,7 +55,7 @@ testthat::expect_true("Assay_Plate_Barcode" %in% colnames(metadata_map))
 
 metadata_map %<>% setNames(names(metadata_map) %>% stringr::str_replace_all("^", "Metadata_"))
 
-profiles %<>% mutate(Metadata_Assay_Plate_Barcode = Metadata_Plate)
+profiles %<>% mutate(Metadata_Assay_Plate_Barcode = as.character(Metadata_Plate))
 
 profiles %<>% inner_join(metadata_map, by = c("Metadata_Assay_Plate_Barcode"))
 
