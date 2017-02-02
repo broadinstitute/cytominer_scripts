@@ -29,4 +29,4 @@ stats <- tbl(src = db, "image") %>%
 
 futile.logger::flog.info(paste0("Writing stats to ", opts[["output"]]))
 
-stats %>% readr::write_csv(opts[["output"]], col_types = cols(Image_Count_Cells = col_integer())
+stats %>% readr::write_csv(opts[["output"]])
