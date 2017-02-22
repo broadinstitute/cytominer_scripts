@@ -2,18 +2,19 @@
 #'  
 #'  @param x ...
 #'  @param path ...
+#'  @param channels ...
 #'  
 #'    
 #' @return The input \code{x}, invisibly.
 #' 
-write_gct <- function(x, path) {
+write_gct <- function(x, path, channels = NULL) {
   stopifnot(is.data.frame(x))
   path <- normalizePath(path, mustWork = FALSE)
   
   if(file.exists(path)) {
     file.remove(path)
   }
-  
+
   # id is hash of metadata columns
   x %<>% 
     tidyr::unite("id", matches("Metadata_"), remove = F) %>% 
@@ -21,7 +22,7 @@ write_gct <- function(x, path) {
     dplyr::mutate(id = digest::digest(id)) %>% 
     dplyr::ungroup() 
   
-  # change has to an sequential id because some sig tools fail if not
+  # change hash to an sequential id because some sig tools fail if not
   x %<>% 
     dplyr::mutate(id = paste0("SAMPLE_", row_number(id)))
     
@@ -41,7 +42,7 @@ write_gct <- function(x, path) {
   column_annotations <- 
     x %>% 
     dplyr::select(matches("^id$|^Metadata_"))
-  
+
   row_annotations <- 
     tibble::data_frame(cp_feature_name = row.names(measurements)) %>%
     tidyr::separate(col = "cp_feature_name", 
@@ -49,6 +50,31 @@ write_gct <- function(x, path) {
                     sep = "_", extra = "merge", remove = FALSE
     )
   
+  if (!is.null(channels)) {
+    # get all combinations of channels
+    channels <- stringr::str_split(channels, ",")[[1]]
+
+    channels <- c(as.vector(outer(channels, channels, FUN = paste, sep = "_")),
+                  channels)
+
+    # get channel name
+    channel_name <- function(feature_name) {
+      name <- channels[which(stringr::str_detect(feature_name, channels))[1]]
+
+      if (is.na(name)) {
+        name <- "None"
+      }
+
+      name
+    }
+
+    # add channel name to row annotations
+    row_annotations %<>%
+      dplyr::rowwise() %>%
+      dplyr::mutate(channel_name = channel_name(feature_name)) %>%
+      ungroup()
+  }
+
   column_annotations_df <- 
     column_annotations %>% 
     t() %>% 

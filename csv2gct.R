@@ -3,10 +3,11 @@
 'csv2gct
 
 Usage: 
-  csv2gct.R <csv_file> -o <file>
+  csv2gct.R <csv_file> -o <file> [-c <str>]
 
 Options:
   -h --help                     Show this screen.
+  -c <str> --channels=<str>     Comma-separated list of image channels.
   -o <file> --output=<file>     GCT file.' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
@@ -19,8 +20,14 @@ opts <- docopt(doc)
 
 csv_file <- opts[["csv_file"]]
 
+channels <- opts[["channels"]]
+
 output <- opts[["output"]]
+
+str(opts)
 
 source("write_gct.R")
 
-suppressMessages(readr::read_csv(csv_file)) %>%  write_gct(output)
+suppressMessages(readr::read_csv(csv_file)) %>%  
+  write_gct(path = output,
+            channels = channels)
