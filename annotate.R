@@ -83,7 +83,7 @@ profiles %<>% inner_join(platemap, by = c("Metadata_well_position"))
 
 if (format_broad_cmap) {
     profiles %<>% 
-        mutate(Metadata_pert_id = stringr::str_extract(Metadata_broad_sample, "(BRD-[A-Z0-9]+)"),
+        mutate(Metadata_pert_id = stringr::str_extract(Metadata_broad_sample, "(BRD[-N][A-Z0-9]+)"),
                Metadata_pert_mfc_id = Metadata_broad_sample,
                Metadata_pert_well = Metadata_Well,
                Metadata_pert_id_vendor = "",
