@@ -2,7 +2,7 @@
 
 'normalize
 
-Usage: 
+Usage:
   normalize.R -b <id> -p <id> -s <query> [-c] [-r <op>] [-t <dir>]
 
 Options:
@@ -51,14 +51,14 @@ if(sample_single_cell) {
   db <- src_sqlite(path = path)
 
   # get metadata and copy to db
-  metadata <- 
-    profiles %>% 
+  metadata <-
+    profiles %>%
     select(matches("Metadata_")) %>%
     distinct()
 
   metadata <- copy_to(db, metadata)
 
-  image <- tbl(src = db, "image") %>% 
+  image <- tbl(src = db, "image") %>%
     select(TableNumber, ImageNumber, Image_Metadata_Plate, Image_Metadata_Well) %>%
     rename(Metadata_Plate = Image_Metadata_Plate,
            Metadata_Well = Image_Metadata_Well) %>%
@@ -74,13 +74,13 @@ compartment_tag <- function(compartment) {
 }
 
 load_objects <- function(compartment) {
-  tbl(src = db, compartment) %>% 
+  tbl(src = db, compartment) %>%
     inner_join(image, by = c("TableNumber", "ImageNumber"))
 
 }
 
 load_profiles <- function(compartment) {
-  profiles %>% 
+  profiles %>%
     select(matches(str_c("Metadata_", "|", compartment_tag(compartment))))
 
 }
@@ -94,9 +94,9 @@ normalize_profiles <- function(compartment) {
 
   }
 
-  sample %<>% 
-    filter_(subset) %>% 
-    collect()
+  sample %<>%
+    filter_(subset) %>%
+    collect(n=Inf)
 
   variables <- colnames(sample) %>% str_subset(compartment_tag(compartment))
 
@@ -111,7 +111,7 @@ normalize_profiles <- function(compartment) {
 
 }
 
-metadata <- 
+metadata <-
   colnames(profiles) %>% str_subset("^Metadata_")
 
 normalized <-
@@ -119,7 +119,7 @@ normalized <-
   inner_join(normalize_profiles("cytoplasm"),
              by = metadata) %>%
   inner_join(normalize_profiles("nuclei"),
-             by = metadata) 
+             by = metadata)
 
 normalized %>% readr::write_csv(paste(backend_dir, paste0(plate_id, "_normalized.csv"), sep = "/"))
 
