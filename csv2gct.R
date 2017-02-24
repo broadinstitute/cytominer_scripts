@@ -24,8 +24,6 @@ channels <- opts[["channels"]]
 
 output <- opts[["output"]]
 
-str(opts)
-
 source("write_gct.R")
 
 suppressMessages(readr::read_csv(csv_file)) %>%  
