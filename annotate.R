@@ -2,7 +2,7 @@
 
 'annotate
 
-Usage: 
+Usage:
   annotate.R -b <id> -p <id> [-c <str> -d -j <file> -m <str>]
 
 Options:
@@ -39,7 +39,7 @@ metadata_dir <- paste("../..", "metadata", batch_id, sep = "/")
 
 backend_dir <- paste("../..", "backend", batch_id, plate_id, sep = "/")
 
-# read profiles and rename column names 
+# read profiles and rename column names
 
 profiles <- suppressMessages(readr::read_csv(paste(backend_dir, paste0(plate_id, ".csv"), sep = "/")))
 
@@ -48,7 +48,7 @@ profiles %<>% setNames(names(profiles) %>% stringr::str_replace_all("^Image_Meta
 # read and join metadata map
 
 metadata_map <- suppressMessages(readr::read_csv(paste(metadata_dir, "barcode_platemap.csv", sep = "/"),
-                                                col_types = cols(Assay_Plate_Barcode = col_character(), 
+                                                col_types = cols(Assay_Plate_Barcode = col_character(),
                                                                  Plate_Map_Name = col_character())))
 
 testthat::expect_true("Assay_Plate_Barcode" %in% colnames(metadata_map))
@@ -82,28 +82,29 @@ profiles %<>% inner_join(platemap, by = c("Metadata_well_position"))
 # format_broad_cmap
 
 if (format_broad_cmap) {
-    profiles %<>% 
+    profiles %<>%
         mutate(Metadata_pert_id = stringr::str_extract(Metadata_broad_sample, "(BRD[-N][A-Z0-9]+)"),
                Metadata_pert_mfc_id = Metadata_broad_sample,
                Metadata_pert_well = Metadata_Well,
                Metadata_pert_id_vendor = "",
                Metadata_cell_id = cell_id)
-    
+
     if (perturbation_mode == "chemical") {
-      profiles %<>% 
-          mutate(Metadata_broad_sample_type = ifelse(is.na(Metadata_broad_sample), "control", "trt"),
+      profiles %<>%
+          mutate(Metadata_broad_sample_type = ifelse(is.na(Metadata_broad_sample) | Metadata_broad_sample == "DMSO", "control", "trt"),
                  Metadata_broad_sample = ifelse(Metadata_broad_sample_type =="control", "DMSO", Metadata_broad_sample),
                  Metadata_mg_per_ml = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mg_per_ml),
                  Metadata_mmoles_per_liter = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mmoles_per_liter),
-                 Metadata_pert_vehicle = Metadata_solvent)      
+                 Metadata_pert_vehicle = Metadata_solvent) %>%
+          mutate(Metadata_broad_sample_type = ifelse(Metadata_broad_sample == "empty", "empty", Metadata_broad_sample))
     }
 
     if (perturbation_mode == "genetic") {
-      profiles %<>% 
+      profiles %<>%
           mutate(Metadata_broad_sample_type = ifelse(Metadata_pert_name == "EMPTY", "control", "trt"))
     }
 
-    profiles %<>% 
+    profiles %<>%
         mutate(Metadata_pert_type = Metadata_broad_sample_type)
 
 }
@@ -118,10 +119,10 @@ if(!is.null(external_metadata)) {
         external_metadata_df %<>% setNames(names(external_metadata_df) %>% stringr::str_replace_all("^", "Metadata_"))
 
     }
-    
-    profiles %<>% 
+
+    profiles %<>%
         left_join(
-            external_metadata_df %>% 
+            external_metadata_df %>%
             distinct()
             )
 }
@@ -132,7 +133,7 @@ if(!is.null(external_metadata)) {
 if (format_broad_cmap) {
 
     if ("Metadata_pert_iname" %in% colnames(profiles)) {
-        profiles %<>% 
+        profiles %<>%
             mutate(Metadata_pert_mfc_desc = Metadata_pert_iname,
                    Metadata_pert_name = Metadata_pert_iname)
 
@@ -140,7 +141,7 @@ if (format_broad_cmap) {
 
 }
 
-# save 
+# save
 
 profiles_augmented <- paste(backend_dir, paste0(plate_id, "_augmented.csv"), sep = "/")
 
