@@ -14,7 +14,10 @@ write_gct <- function(x, path, channels = NULL) {
   if(file.exists(path)) {
     file.remove(path)
   }
-
+  
+  # strip `Image_` prefix from Metadata columns names, if they exist
+  names(x) %<>% stringr::str_replace("^Image_Metadata", "Metadata")
+  
   # id is hash of metadata columns
   x %<>% 
     tidyr::unite("id", matches("Metadata_"), remove = F) %>% 
