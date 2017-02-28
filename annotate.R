@@ -93,10 +93,13 @@ if (format_broad_cmap) {
       profiles %<>%
           mutate(Metadata_broad_sample_type = ifelse(is.na(Metadata_broad_sample) | Metadata_broad_sample == "DMSO", "control", "trt"),
                  Metadata_broad_sample = ifelse(Metadata_broad_sample_type =="control", "DMSO", Metadata_broad_sample),
-                 Metadata_mg_per_ml = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mg_per_ml),
                  Metadata_mmoles_per_liter = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mmoles_per_liter),
                  Metadata_pert_vehicle = Metadata_solvent) %>%
           mutate(Metadata_broad_sample_type = ifelse(Metadata_broad_sample == "empty", "empty", Metadata_broad_sample_type))
+      if ("Metadata_mg_per_ml" in names(profiles)) {
+        profiles %<>% mutate(Metadata_mg_per_ml = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mg_per_ml),
+
+      }
     }
 
     if (perturbation_mode == "genetic") {
