@@ -96,8 +96,8 @@ if (format_broad_cmap) {
                  Metadata_mmoles_per_liter = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mmoles_per_liter),
                  Metadata_pert_vehicle = Metadata_solvent) %>%
           mutate(Metadata_broad_sample_type = ifelse(Metadata_broad_sample == "empty", "empty", Metadata_broad_sample_type))
-      if ("Metadata_mg_per_ml" in names(profiles)) {
-        profiles %<>% mutate(Metadata_mg_per_ml = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mg_per_ml),
+      if ("Metadata_mg_per_ml" %in% names(profiles)) {
+        profiles %<>% mutate(Metadata_mg_per_ml = ifelse(Metadata_broad_sample_type =="control", 0, Metadata_mg_per_ml))
 
       }
     }
