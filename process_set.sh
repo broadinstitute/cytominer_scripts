@@ -32,7 +32,7 @@ done
 TMP_DIR="${TMP_DIR:-/tmp}"
 
 for var in BATCH_ID SET_ID TMP_DIR;
-do 
+do
     if [[  -z "${!var}"  ]];
     then
         echo ${var} not defined.

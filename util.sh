@@ -4,7 +4,7 @@ function check_path {
 
     pathvar=$2
 
-    if [[ ($state != "exists") && ($state != "not_exists") ]]; then	
+    if [[ ($state != "exists") && ($state != "not_exists") ]]; then
 	(>&2 echo "Unknown state: $state")
 
 	exit 1
@@ -16,10 +16,10 @@ function check_path {
 	message="not created / does not exist."
 
 	(>&2 echo "[$tstamp] ${pathvar}" $message "Exiting.")
-	    
+
 	exit 1
     fi
-    
+
     if [[ $state == "not_exists" && -a "$pathvar" ]]; then
 	    message="exists."
 
@@ -54,11 +54,11 @@ function compare_md5() {
     MD5_A=`md5sum ${A} | cut -f1 -d' '`
 
     MD5_B=`md5sum ${B} | cut -f1 -d' '`
-    
+
     if [[ $MD5_A != $MD5_B ]]; then
-	
+
 	tstamp=`date`
-	
+
 	(>&2 echo "[$tstamp] md5 check failed: ${A} and ${B} are different")
 
 	exit 1
@@ -73,7 +73,7 @@ function create_and_check_dir () {
     mkdir -p ${dname}
 
     check_path exists ${dname}
-    
+
     echo `readlink -e $dname`
 }
 
@@ -95,12 +95,12 @@ function move_and_check_file () {
 }
 
 function check_cmd_exists () {
-    # This doesn't catch the case where the cmd is a python command that is 
+    # This doesn't catch the case where the cmd is a python command that is
     # available in a different pyenv environment.
 
     cmdstr=$1
 
-    eval type $cmdstr >/dev/null 2>&1 || { 
+    eval type $cmdstr >/dev/null 2>&1 || {
 
 	echo >&2 "$cmdstr not installed.  Aborting."
 

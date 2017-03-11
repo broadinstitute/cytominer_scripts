@@ -47,7 +47,7 @@ filelist <- barcode_platemap %>%
     )
   ))
 
-profiles <- lapply(filelist$filename, 
+profiles <- lapply(filelist$filename,
     function(filename) {
         if (file.exists(filename)) {
             suppressMessages(readr::read_csv(filename))
@@ -62,10 +62,10 @@ variables <-
   colnames(profiles) %>%
   stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
 
-metadata <- 
+metadata <-
   stringr::str_subset(names(profiles), "^Metadata_")
 
-degroup <- c("Metadata_Plate", "Metadata_Assay_Plate_Barcode", 
+degroup <- c("Metadata_Plate", "Metadata_Assay_Plate_Barcode",
   "Metadata_Batch_Date", "Metadata_Batch_Number")
 
 aggregated <-

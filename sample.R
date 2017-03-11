@@ -34,9 +34,9 @@ backend_dir <- paste("../..", "backend", batch_id, sep = "/")
 
 metadata_dir <- paste("../..", "metadata", batch_id, sep = "/")
 
-file_list <- list.files(backend_dir, 
-    pattern = pattern, 
-    recursive = T, full.names = T) 
+file_list <- list.files(backend_dir,
+    pattern = pattern,
+    recursive = T, full.names = T)
 
 if (!is.null(replicates)) {
 
@@ -49,27 +49,27 @@ if (!is.null(replicates)) {
     replicates <- as.integer(replicates)
 
     # create a plate_list based on number of replicates to be selected
-    plate_list <- 
+    plate_list <-
         suppressMessages(readr::read_csv(paste(metadata_dir, "barcode_platemap.csv", sep = "/"),
-                                        col_types = cols(Assay_Plate_Barcode = col_character(), 
+                                        col_types = cols(Assay_Plate_Barcode = col_character(),
                                                          Plate_Map_Name = col_character()))) %>%
         select(Assay_Plate_Barcode, Plate_Map_Name) %>%
         inner_join(plate_list_retrieved, by = "Assay_Plate_Barcode") %>%
-        group_by(Plate_Map_Name) %>% 
-        arrange(Assay_Plate_Barcode) %>% 
-        mutate(replicate_id = row_number(Assay_Plate_Barcode)) %>% 
-        filter(replicate_id %in% seq(replicates)) %>% 
-        ungroup() %>% 
+        group_by(Plate_Map_Name) %>%
+        arrange(Assay_Plate_Barcode) %>%
+        mutate(replicate_id = row_number(Assay_Plate_Barcode)) %>%
+        filter(replicate_id %in% seq(replicates)) %>%
+        ungroup() %>%
         select(Assay_Plate_Barcode) %>%
         magrittr::extract2("Assay_Plate_Barcode")
 
     # filter file_list based on plate_list
-    file_list <- 
-        lapply(file_list, 
+    file_list <-
+        lapply(file_list,
             function(file) {
                 if(length(unlist(lapply(plate_list, function(plate) grep(plate, file))))) {
                     file
-                } 
+                }
             }
             ) %>%
             unlist()
@@ -77,9 +77,9 @@ if (!is.null(replicates)) {
 
 futile.logger::flog.info(sprintf("Reading %d files...:\n%s", length(file_list), paste(file_list, collapse="\n")))
 
-df <- file_list %>% 
+df <- file_list %>%
   lapply(function(x) suppressMessages(readr::read_csv(x))) %>%
-  bind_rows() 
+  bind_rows()
 
 futile.logger::flog.info(sprintf("Output contains %d rows.", nrow(df)))
 

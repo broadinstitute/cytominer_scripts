@@ -3,7 +3,7 @@
 'preselect
 
 Usage:
-  preselect.R -b <id> -i <file> -r <list> [-n <n>] [-s <query>] 
+  preselect.R -b <id> -i <file> -r <list> [-n <n>] [-s <query>]
 
 options:
   -h --help                        Show this screen.
@@ -78,7 +78,7 @@ for (operation in operations) {
         sample <- df %>% filter_(subset)
 
     } else {
-        sample <- df 
+        sample <- df
 
     }
 
@@ -98,7 +98,7 @@ for (operation in operations) {
         # This is handled differently because there is no direct way yet to do filtering in cytominer
         # TODO: rewrite this after cytominer has an appropriate filtering function for this
         testthat::expect_false(is.null(replicates), info="replicates should be specified when performing replicate_correlation")
-        
+
         feature_replicate_correlations <-
           df %>%
           cytominer::replicate_correlation(
@@ -109,11 +109,11 @@ for (operation in operations) {
             replicates = replicates
             )
 
-        feature_replicate_correlations %>% 
+        feature_replicate_correlations %>%
           readr::write_csv(paste0("../../parameters/", batch_id, "/variable_selection/", operation, ".csv" ))
 
-        variables <- 
-          feature_replicate_correlations %>% 
+        variables <-
+          feature_replicate_correlations %>%
           na.omit() %>%
           filter(median > 0.6) %>% # intentionally hard-coded to avoid confusion
           magrittr::extract2("variable")
@@ -122,8 +122,8 @@ for (operation in operations) {
           colnames(df) %>%
           stringr::str_subset("^Metadata_")
 
-        df %<>% 
-          select_(.dots = c(metadata, variables))          
+        df %<>%
+          select_(.dots = c(metadata, variables))
     }
 
     variables <-

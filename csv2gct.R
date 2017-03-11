@@ -2,7 +2,7 @@
 
 'csv2gct
 
-Usage: 
+Usage:
   csv2gct.R <csv_file> -o <file> [-c <str>]
 
 Options:
@@ -26,6 +26,6 @@ output <- opts[["output"]]
 
 source("write_gct.R")
 
-suppressMessages(readr::read_csv(csv_file)) %>%  
+suppressMessages(readr::read_csv(csv_file)) %>%
   write_gct(path = output,
             channels = channels)

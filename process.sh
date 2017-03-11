@@ -111,7 +111,7 @@ format_broad_cmap="${format_broad_cmap:-NO}"
 perturbation_mode="${perturbation_mode:-chemical}"
 
 for var in batch_id pipeline plate_id tmp_dir;
-do 
+do
     if [[  -z "${!var}"  ]];
     then
         echo ${var} not defined.
@@ -144,7 +144,7 @@ if [[ (! -e $backend_archive_file) || (! -e $aggregated_archive_file) ]]; then
     if [[ $check_result == 1 ]]; then
 
         check_path exists ${plate_dir}
-    
+
         create_backend_file
 
     fi
@@ -158,7 +158,7 @@ if [[ (! -e $backend_archive_file) || (! -e $aggregated_archive_file) ]]; then
     move_and_check_file $aggregated_file $aggregated_archive_file
 
 else
-    
+
     info "$backend_archive_file and $aggregated_archive_file already exist. Will not recreate them."
 
 fi

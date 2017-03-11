@@ -2,7 +2,7 @@
 
 'select
 
-Usage: 
+Usage:
   select.R -b <id> -p <id> -r <list>
 
 Options:
@@ -27,13 +27,13 @@ filters <- opts[["filters"]]
 
 filters <- stringr::str_split(filters, ",")[[1]]
 
-# read features 
+# read features
 
-variables_selected <- 
+variables_selected <-
     lapply(filters,
         function (filt) {
             suppressMessages(readr::read_tsv(paste0("../../parameters/", batch_id, "/variable_selection/", filt, ".txt" )))
-        }) %>% 
+        }) %>%
     Reduce(function(df1, df2) dplyr::inner_join(df1, df2, by ="variable"), .) %>%
     magrittr::extract2("variable")
 
@@ -57,7 +57,7 @@ variables <- intersect(variables, variables_selected)
 
 testthat::expect_gt(length(variables), 0)
 
-df %<>% 
+df %<>%
   select_(.dots = c(metadata, variables))
 
 df %>%

@@ -1,5 +1,5 @@
 library(rhdf5)
-library(RCurl)	
+library(RCurl)
 write.gctx <- function(mdat, row.annotations=NULL, column.annotations=NULL, write.rownames=T, write.colnames=T, row.hclust=NULL, column.hclust=NULL, file) {
 	if(!is.null(row.hclust)) {
 		mdat <- mdat[row.hclust$order,]
@@ -15,12 +15,12 @@ write.gctx <- function(mdat, row.annotations=NULL, column.annotations=NULL, writ
 	}
 	h5createFile(file)
 	# h5writeAttribute('GCTX1.0', file, '/', 'version')
-	
+
 	h5createGroup(file, '0')
 	h5createGroup(file, '0/DATA')
 	h5createGroup(file, '0/DATA/0')
 	h5write(mdat, file,'0/DATA/0/matrix')
-	
+
 	h5createGroup(file, '0/META')
 	h5createGroup(file, '0/META/COL')
 	h5createGroup(file, '0/META/ROW')
@@ -54,7 +54,7 @@ r2atr <- function(file, hc, rows)
   merge12 <- paste ( -1-merge1,'X',sep='')
   merge1[hc$merge[,1]>0] <- merge11[hc$merge[,1]>0]
   merge1[hc$merge[,1]<0] <- merge12[hc$merge[,1]<0]
-  
+
   merge2  <- hc$merge[,2]
   merge11 <- paste ('NODE',merge2,'X',sep='')
   merge12 <- paste (-1-merge2,'X',sep='')
@@ -63,7 +63,7 @@ r2atr <- function(file, hc, rows)
 
   path <- if(rows) '0/DATA/row_dendrogram' else '0/DATA/column_dendrogram'
   h5createGroup(file, path)
- 
+
   h5write(node, file, paste(path, 'id', sep='/'))
   h5write(merge1, file, paste(path, 'left', sep='/'))
   h5write(merge2, file, paste(path, 'right', sep='/'))
@@ -98,7 +98,7 @@ read.gctx = function (f, matrix=TRUE) {
 	mat <-  NULL
 	if(matrix) {
 		mat <-  h5read(f, "0/DATA/0/matrix")
-	}	
+	}
 	row.meta <-  read.meta(f, "0/META/ROW")
 	column.meta <- read.meta(f, "0/META/COL")
 	return(list(row.annotations=row.meta, column.annotations=column.meta, matrix=mat))
@@ -112,7 +112,7 @@ read.meta = function (f, path) {
  	for(i in 1:length(fields)) {
  		field <- fields[i]
  		meta.data[,i] <- obj[[field]]
-    }	
+    }
     return(meta.data)
 }
 
@@ -137,7 +137,7 @@ to.genee <- function (mdat, row.annotations=NULL, column.annotations=NULL, show.
 	on.exit(unlink(f))
 	write.gctx(mdat, row.annotations, column.annotations, show.rownames, show.colnames, row.hclust, column.hclust, f)
 	#curl_setopt($curl, CURLOPT_HTTPHEADER, array('Expect:'));
-	x <-postForm(paste(url, 'api/to', sep='/'), binary=T, "fileName"=name, "fileData" = fileUpload(f,  contentType = 'application/gctx'), .opts = list(verbose = FALSE, header = TRUE))	
+	x <-postForm(paste(url, 'api/to', sep='/'), binary=T, "fileName"=name, "fileData" = fileUpload(f,  contentType = 'application/gctx'), .opts = list(verbose = FALSE, header = TRUE))
 }
 
 
