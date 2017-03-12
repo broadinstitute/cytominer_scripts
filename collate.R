@@ -95,7 +95,7 @@ if (!file.exists(cache_backend_file) | overwrite_backend_cache) {
   # add a column `Image_Metadata_Plate` if specified
 
   if(!is.null(column_as_plate)) {
-    system("sqlite3", cache_backend_file, "'ALTER TABLE Image ADD COLUMN Image_Metadata_Plate TEXT;'")
+    system(paste("sqlite3", cache_backend_file, "'ALTER TABLE Image ADD COLUMN Image_Metadata_Plate TEXT;'"))
 
     system(paste("sqlite3", cache_backend_file, "'UPDATE image SET Image_Metadata_Plate =", column_as_plate, ";'"))
 
