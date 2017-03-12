@@ -3,17 +3,18 @@
 'collate
 
 Usage:
-  collate.R -b <id> -p <id> [-c <file>] [-m] [-n <str>] [-t <dir>] [-x]
+  collate.R -b <id> -p <id> [-c <file>] [-l <str>] [-m] [-n <str>] [-t <dir>] [-x]
 
 Options:
-  -b <id> --batch_id=<id>           Batch ID.
-  -c <file> --config=<file>         Config file specifying how to collate.
-  -p <id> --plate_id=<id>           Plate ID.
-  -m --munge                        Split object CSV into separate CSVs per compartment.
-  -n <str> --pipeline_name=<str>    Name of pipeline that produced the output CSVs [default: analysis].
-  -t <dir> --tmpdir=<dir>           Temporary directory [default: /tmp].
-  -x --overwrite_backend_cache      Overwrite backend cache file if it exists.
-  -h --help                         Show this screen.' -> doc
+  -b <id> --batch_id=<id>             Batch ID.
+  -c <file> --config=<file>           Config file specifying how to collate.
+  -p <id> --plate_id=<id>             Plate ID.
+  -l <str> --column_as_plate=<str>    Column name in CSV file that should be mapped to Image_Metadata_Plate.
+  -m --munge                          Split object CSV into separate CSVs per compartment.
+  -n <str> --pipeline_name=<str>      Name of pipeline that produced the output CSVs [default: analysis].
+  -t <dir> --tmpdir=<dir>             Temporary directory [default: /tmp].
+  -x --overwrite_backend_cache        Overwrite backend cache file if it exists.
+  -h --help                           Show this screen.' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 
@@ -26,6 +27,8 @@ suppressWarnings(suppressMessages(library(stringr)))
 opts <- docopt(doc)
 
 batch_id <- opts[["batch_id"]]
+
+column_as_plate <- opts[["column_as_plate"]]
 
 config <- opts[["config"]]
 
@@ -88,6 +91,15 @@ if (!file.exists(cache_backend_file) | overwrite_backend_cache) {
   system(ingest_cmd)
 
   stopifnot(file.exists(cache_backend_file))
+
+  # add a column `Image_Metadata_Plate` if specified
+
+  if(!is.null(column_as_plate)) {
+    system(paste("sqlite", "ALTER TABLE Image ADD COLUMN Image_Metadata_Plate TEXT;"))
+
+    system(paste("UPDATE image SET Image_Metadata_Plate =", column_as_plate, ";"))
+
+  }
 
   # create index
 
