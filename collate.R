@@ -39,7 +39,7 @@ plate_id <- opts[["plate_id"]]
 
 tmpdir <- opts[["tmpdir"]]
 
-str(opts)
+# str(opts)
 
 input_dir <- file.path("../..", "analysis", batch_id, plate_id, pipeline_name)
 
@@ -67,14 +67,14 @@ aggregated_file <- file.path(backend_dir, paste0(plate_id, ".csv"))
 
 if (file.exists(backend_file) & file.exists(aggregated_file)) {
   # nothing to do
-  futile.logger::flog.info()
+  futile.logger::flog.info(paste(backend_file, "and", aggregated_file, "already exist."))
 
   quit()
 
 }
 
 if (!file.exists(cache_backend_file) | overwrite_backend_cache) {
-  ingest_cmd <- paste("time ingest", input_dir, "-o", paste0("sqlite:///", cache_backend_file),
+  ingest_cmd <- paste("ingest", input_dir, "-o", paste0("sqlite:///", cache_backend_file),
       "-c", config, ifelse(munge, "--munge", "--no-munge"))
 
   if (file.exists(cache_backend_file)) {
@@ -83,15 +83,19 @@ if (!file.exists(cache_backend_file) | overwrite_backend_cache) {
 
   # ingest
 
-  message(ingest_cmd) #TODO
+  futile.logger::flog.info("Ingesting...")
+
+  system(ingest_cmd) #TODO
 
   stopifnot(file.exists(cache_backend_file))
 
   # create index
 
-  index_cmd <- paste("sqlite3", backend_file, "indices.sql")
+  index_cmd <- paste("sqlite3", cache_backend_file, "< indices.sql")
 
-  message(index_cmd) #TODO
+  futile.logger::flog.info("Indexing...")
+
+  system(index_cmd) #TODO
 
 }
 
@@ -99,19 +103,26 @@ if (!file.exists(cache_backend_file) | overwrite_backend_cache) {
 
 aggregate_cmd <- paste("./aggregate.R", cache_backend_file, "-o", cache_aggregated_file)
 
-message(aggregate_cmd) #TODO
+futile.logger::flog.info("Aggregating...")
+
+system(aggregate_cmd) #TODO
 
 stopifnot(file.exists(cache_aggregated_file))
 
 move_and_check <- function(src, dst) {
   file.copy(src, dst)
 
-  stopifnot(tools::md5sum(src), tools::md5sum(dst))
+  stopifnot(tools::md5sum(src) == tools::md5sum(dst))
 
   file.remove(src)
 
+  invisible()
+
 }
+
+futile.logger::flog.info("Moving...")
+
+move_and_check(cache_backend_file, backend_file)
 
 move_and_check(cache_aggregated_file, aggregated_file)
 
-move_and_check(cache_backend_file, backend_file)
