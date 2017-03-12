@@ -85,7 +85,7 @@ if (!file.exists(cache_backend_file) | overwrite_backend_cache) {
 
   futile.logger::flog.info("Ingesting...")
 
-  system(ingest_cmd) #TODO
+  system(ingest_cmd)
 
   stopifnot(file.exists(cache_backend_file))
 
@@ -95,7 +95,7 @@ if (!file.exists(cache_backend_file) | overwrite_backend_cache) {
 
   futile.logger::flog.info("Indexing...")
 
-  system(index_cmd) #TODO
+  system(index_cmd)
 
 }
 
@@ -105,7 +105,7 @@ aggregate_cmd <- paste("./aggregate.R", cache_backend_file, "-o", cache_aggregat
 
 futile.logger::flog.info("Aggregating...")
 
-system(aggregate_cmd) #TODO
+system(aggregate_cmd)
 
 stopifnot(file.exists(cache_aggregated_file))
 
