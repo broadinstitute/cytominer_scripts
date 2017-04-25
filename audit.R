@@ -7,6 +7,7 @@ Usage:
 
 Options:
   -h --help                          Show this screen.
+  -a <int> --accuracy=<int>          Accuracy of null threshold estimation (higher = more robust) [default: 10]. 
   -b <id> --batch_id=<id>            Batch ID.
   -m <id> --plate_map_name=<id>      Plate map name.
   -o <file> --output=<file>          Output CSV file (audit summarized across all groups).
@@ -15,8 +16,7 @@ Options:
   -f <str> --suffix=<str>            Suffix to append to barcode to select a profile file [default: _normalized_variable_selected.csv].
   -p <var> --group_by=<var>          Group by column [default: Metadata_Well].
   -r <op> --operation=<op>           Audit operation [default: replicate_quality].
-  -t <dir> --tmpdir=<dir>            Temporary directory [default: /tmp].
-  -a <int> --accuracy=<int>          Accuracy of null threshold estimation (higher = more robust)  [default: 10].  ' -> doc
+  -t <dir> --tmpdir=<dir>            Temporary directory [default: /tmp]. ' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 
@@ -94,6 +94,7 @@ median_pairwise_correlation <- function(df, variables, group_by) {
     do(tibble::data_frame(correlation = median(as.dist(cor(t(as.matrix(.[variables])))))))
 }
 
+
 estimate_null_threshold <- function(df, variables, group_by, accuracy) {
   us <- c()
   u <-  c()
@@ -104,11 +105,10 @@ estimate_null_threshold <- function(df, variables, group_by, accuracy) {
       median_pairwise_correlation(variables, "group_by") 
     us <- rbind(us,u)
   }
-  
   null_threshold <- us %>%
     magrittr::extract2("correlation") %>%
     quantile(0.95, na.rm = TRUE) 
-  
+
   return(null_threshold)
 }
 
