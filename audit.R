@@ -2,12 +2,12 @@
 
 'audit
 
-Usage: 
+Usage:
   audit.R -b <id> -m <id> -o <file> [-a <int>] [-l <file>] [-s <query>] [-p <var>] [-f <str>] [-r <op>] [-t <dir>]
 
 Options:
   -h --help                          Show this screen.
-  -a <int> --accuracy=<int>          Accuracy of null threshold estimation (higher = more robust) [default: 10]. 
+  -a <int> --accuracy=<int>          Accuracy of null threshold estimation (higher = more robust) [default: 10].
   -b <id> --batch_id=<id>            Batch ID.
   -m <id> --plate_map_name=<id>      Plate map name.
   -o <file> --output=<file>          Output CSV file (audit summarized across all groups).
@@ -38,7 +38,7 @@ output_detailed <- opts[["output_detailed"]]
 
 group_by <- stringr::str_split(opts[["group_by"]], ",")[[1]]
 
-subset <- opts[["subset"]] 
+subset <- opts[["subset"]]
 
 suffix <- opts[["suffix"]]
 
@@ -51,11 +51,11 @@ metadata_dir <- paste("../..", "metadata", batch_id, sep = "/")
 barcode_platemap <- suppressMessages(readr::read_csv(paste0(metadata_dir, "/barcode_platemap.csv")))
 
 filelist <- barcode_platemap %>%
-  filter(Plate_Map_Name == plate_map_name) %>% 
+  filter(Plate_Map_Name == plate_map_name) %>%
   mutate(filename = normalizePath(paste0(backend_dir, "/", Assay_Plate_Barcode, "/", Assay_Plate_Barcode, suffix)))
 
 
-df <- lapply(filelist$filename, 
+df <- lapply(filelist$filename,
     function(filename) {
         if (file.exists(filename)) {
             suppressMessages(readr::read_csv(filename))
@@ -64,7 +64,7 @@ df <- lapply(filelist$filename,
             tibble::data_frame()
 
         }
-    }) %>% 
+    }) %>%
   bind_rows()
 
 if (!is.null(subset)) {
@@ -89,38 +89,36 @@ metadata <-
 stopifnot(group_by %in% metadata)
 
 median_pairwise_correlation <- function(df, variables, group_by) {
-  df %>% 
-    dplyr::group_by_(.dots = group_by) %>% 
+  df %>%
+    dplyr::group_by_(.dots = group_by) %>%
     do(tibble::data_frame(correlation = median(as.dist(cor(t(as.matrix(.[variables])))))))
 }
-
 
 estimate_null_threshold <- function(df, variables, group_by, accuracy) {
   us <- c()
   u <-  c()
   for (i in 1:accuracy) {
-    u <- df %>% 
+    u <- df %>%
       tidyr::unite_("group_by", group_by) %>%
       mutate(group_by = sample(group_by)) %>%
-      median_pairwise_correlation(variables, "group_by") 
+      median_pairwise_correlation(variables, "group_by")
     us <- rbind(us,u)
   }
   null_threshold <- us %>%
     magrittr::extract2("correlation") %>%
-    quantile(0.95, na.rm = TRUE) 
+    quantile(0.95, na.rm = TRUE)
 
   return(null_threshold)
 }
 
 set.seed(24)
 
-correlations <- df %>% 
-  median_pairwise_correlation(variables, group_by) 
+correlations <- df %>%
+  median_pairwise_correlation(variables, group_by)
 
-null_threshold <- estimate_null_threshold(df, variables, group_by, accuracy) 
+null_threshold <- estimate_null_threshold(df, variables, group_by, accuracy)
 
-
-result <- 
+result <-
   tibble::data_frame(
     plate_map_name = plate_map_name,
     null_threshold = null_threshold,
