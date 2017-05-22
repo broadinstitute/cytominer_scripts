@@ -86,8 +86,15 @@ if (format_broad_cmap) {
         mutate(Metadata_pert_id = stringr::str_extract(Metadata_broad_sample, "(BRD[-N][A-Z0-9]+)"),
                Metadata_pert_mfc_id = Metadata_broad_sample,
                Metadata_pert_well = Metadata_Well,
-               Metadata_pert_id_vendor = "",
-               Metadata_cell_id = cell_id)
+               Metadata_pert_id_vendor = "")
+  
+    if ('Metadata_cell_id' %in% names(profiles)) {
+      message('`cell_id` column present in metadata, will not override.')
+      
+    } else {
+      profiles %<>% mutate(Metadata_cell_id = cell_id)
+      
+    }
 
     if (perturbation_mode == "chemical") {
       profiles %<>%
