@@ -94,12 +94,12 @@ normalize_profiles <- function(compartment) {
 
   }
 
+  variables <- colnames(sample) %>% str_subset(compartment_tag(compartment))
+
   sample %<>%
     filter_(subset) %>%
     collect(n=Inf) %>%
     mutate_at(variables, as.double)
-
-  variables <- colnames(sample) %>% str_subset(compartment_tag(compartment))
 
   normalized <-
     cytominer::normalize(
