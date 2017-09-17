@@ -65,9 +65,9 @@ for (operation in operations) {
     futile.logger::flog.info("Dropping variables that have NA in any row...")
 
     df %<>%
-      cytominer::select(variables = variables,
-                        operation = "drop_na_columns",
-                        cutoff = 0.0)
+      cytominer::variable_select(variables = variables,
+                                 operation = "drop_na_columns",
+                                 cutoff = 0.0)
     variables <-
       colnames(df) %>%
       stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
@@ -86,7 +86,7 @@ for (operation in operations) {
 
     if (operation %in% c("variance_threshold", "correlation_threshold")) {
         df <-
-          cytominer::select(
+          cytominer::variable_select(
             population = df,
             variables = variables,
             sample = sample,
