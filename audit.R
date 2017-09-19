@@ -3,19 +3,20 @@
 'audit
 
 Usage:
-  audit.R -b <id> -m <id> -o <file> [-l <file>] [-s <query>] [-p <var>] [-f <str>] [-r <op>] [-t <dir>]
+  audit.R -b <id> -m <id> -o <file> [-a <int>] [-l <file>] [-s <query>] [-p <var>] [-f <str>] [-r <op>] [-t <dir>]
 
 Options:
   -h --help                          Show this screen.
   -b <id> --batch_id=<id>            Batch ID.
   -m <id> --plate_map_name=<id>      Plate map name.
   -o <file> --output=<file>          Output CSV file (audit summarized across all groups).
+  -a <int> --iterations=<int>        Number of iterations of permutation test to estimate null threshold estimation (higher = more robust) [default: 10].
   -l <file> --output_detailed=<file> Output CSV file (audit per group).
   -s <query> --subset=<query>        Query to specify the sample for doing the audit.
-  -f <str> --suffix=<str>            Suffix to append to barcode to select a profile file [default: _normalized_variable_selected.csv]
+  -f <str> --suffix=<str>            Suffix to append to barcode to select a profile file [default: _normalized_variable_selected.csv].
   -p <var> --group_by=<var>          Group by column [default: Metadata_Well].
   -r <op> --operation=<op>           Audit operation [default: replicate_quality].
-  -t <dir> --tmpdir=<dir>            Temporary directory [default: /tmp].' -> doc
+  -t <dir> --tmpdir=<dir>            Temporary directory [default: /tmp]. ' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
 
@@ -23,23 +24,27 @@ suppressWarnings(suppressMessages(library(dplyr)))
 
 suppressWarnings(suppressMessages(library(magrittr)))
 
+suppressWarnings(suppressMessages(library(purrr)))
+
 opts <- docopt(doc)
 
 batch_id <- opts[["batch_id"]]
 
 plate_map_name <- opts[["plate_map_name"]]
 
-operation <- opts[["operation"]]
-
 output <- opts[["output"]]
 
-output_detailed <- opts[["output_detailed"]]
+iterations <- opts[["iterations"]]
 
-group_by <- stringr::str_split(opts[["group_by"]], ",")[[1]]
+output_detailed <- opts[["output_detailed"]]
 
 subset <- opts[["subset"]]
 
 suffix <- opts[["suffix"]]
+
+group_by <- stringr::str_split(opts[["group_by"]], ",")[[1]]
+
+operation <- opts[["operation"]]
 
 backend_dir <- paste("../..", "backend", batch_id, sep = "/")
 
@@ -51,18 +56,18 @@ filelist <- barcode_platemap %>%
   filter(Plate_Map_Name == plate_map_name) %>%
   mutate(filename = normalizePath(paste0(backend_dir, "/", Assay_Plate_Barcode, "/", Assay_Plate_Barcode, suffix)))
 
-
-df <- lapply(filelist$filename,
+df <- filelist$filename %>% 
+  map_df(
     function(filename) {
-        if (file.exists(filename)) {
-            suppressMessages(readr::read_csv(filename))
-
-        } else {
-            tibble::data_frame()
-
-        }
-    }) %>%
-  bind_rows()
+      if (file.exists(filename)) {
+        suppressMessages(readr::read_csv(filename))
+        
+      } else {
+        tibble::data_frame()
+        
+      }
+    }
+  )
 
 if (!is.null(subset)) {
   df %<>% filter_(subset)
@@ -82,12 +87,13 @@ metadata <-
   colnames(df) %>%
   stringr::str_subset("^Metadata_")
 
+# group_by is an input variable
 stopifnot(group_by %in% metadata)
 
 median_pairwise_correlation <- function(df, variables, group_by) {
   df %>%
     dplyr::group_by_(.dots = group_by) %>%
-    do(tibble::data_frame(correlation = median(cor(t(as.matrix(.[variables]))))))
+    do(tibble::data_frame(correlation = median(as.dist(cor(t(as.matrix(.[variables])))))))
 }
 
 set.seed(24)
@@ -95,10 +101,14 @@ set.seed(24)
 correlations <- df %>%
   median_pairwise_correlation(variables, group_by)
 
-null_threshold <- df %>%
-  tidyr::unite_("group_by", group_by) %>%
-  mutate(group_by = sample(group_by)) %>%
-  median_pairwise_correlation(variables, "group_by") %>%
+null_threshold <- 
+  1:iterations %>% 
+  map_df(function(i) {
+    df %>%
+      tidyr::unite_("group_by", group_by) %>%
+      mutate(group_by = sample(group_by)) %>%
+      median_pairwise_correlation(variables, "group_by")
+  }) %>%
   magrittr::extract2("correlation") %>%
   quantile(0.95, na.rm = TRUE)
 
@@ -106,7 +116,8 @@ result <-
   tibble::data_frame(
     plate_map_name = plate_map_name,
     null_threshold = null_threshold,
-    fraction_strong = (sum(correlations$correlation > null_threshold) / nrow(correlations)))
+    fraction_strong = (sum(correlations$correlation > null_threshold) / nrow(correlations))
+    )
 
 knitr::kable(result)
 
@@ -119,4 +130,3 @@ if (!is.null(output_detailed)) {
   correlations %>% readr::write_csv(output_detailed)
 
 }
-#summary(correlations)
