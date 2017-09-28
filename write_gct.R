@@ -27,7 +27,7 @@ write_gct <- function(x, path, channels = NULL) {
 
   # change hash to an sequential id because some sig tools fail if not
   x %<>%
-    dplyr::mutate(id = paste0("SAMPLE_", row_number(id)))
+    dplyr::mutate(id = paste0("SAMPLE_", dense_rank(id)))
 
   # write.gctx does not handle Date
   x %<>% dplyr::mutate_if(is.numeric.Date, as.character)
