@@ -57,7 +57,7 @@ if (!is.null(replicates)) {
         inner_join(plate_list_retrieved, by = "Assay_Plate_Barcode") %>%
         group_by(Plate_Map_Name) %>%
         arrange(Assay_Plate_Barcode) %>%
-        mutate(replicate_id = row_number(Assay_Plate_Barcode)) %>%
+        mutate(replicate_id = dense_rank(Assay_Plate_Barcode)) %>%
         filter(replicate_id %in% seq(replicates)) %>%
         ungroup() %>%
         select(Assay_Plate_Barcode) %>%
