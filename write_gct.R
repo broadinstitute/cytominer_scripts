@@ -7,7 +7,7 @@
 #'
 #' @return The input \code{x}, invisibly.
 #'
-write_gct <- function(x, path, channels = NULL) {
+write_gct <- function(x, path, channels = NULL, feature_regex = "^Nuclei_|^Cells_|^Cytoplasm_", create_row_annotations = TRUE) {
   stopifnot(is.data.frame(x))
   path <- normalizePath(path, mustWork = FALSE)
 
@@ -34,7 +34,7 @@ write_gct <- function(x, path, channels = NULL) {
 
   feature_cols <-
     colnames(x) %>%
-    stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
+    stringr::str_subset(feature_regex)
 
   measurements <-
     x %>%
@@ -47,11 +47,14 @@ write_gct <- function(x, path, channels = NULL) {
     dplyr::select(matches("^id$|^Metadata_"))
 
   row_annotations <-
-    tibble::data_frame(cp_feature_name = row.names(measurements)) %>%
-    tidyr::separate(col = "cp_feature_name",
-                    into = c("compartment", "feature_group", "feature_name"),
-                    sep = "_", extra = "merge", remove = FALSE
-    )
+    tibble::data_frame(cp_feature_name = row.names(measurements))
+
+  if (create_row_annotations) {
+      row_annotations %<>%
+        tidyr::separate(col = "cp_feature_name",
+                        into = c("compartment", "feature_group", "feature_name"),
+                        sep = "_", extra = "merge", remove = FALSE)
+  }
 
   if (!is.null(channels)) {
     # get all combinations of channels
