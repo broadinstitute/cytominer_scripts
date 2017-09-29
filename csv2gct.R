@@ -9,7 +9,7 @@ Options:
   -h --help                         Show this screen.
   -a --create_row_annotations       Create row annotations.
   -c <str> --channels=<str>         Comma-separated list of image channels.
-  -p <str> --feature_regex=<str>    Regular expression to extract features from column names. [default: "^Nuclei_|^Cells_|^Cytoplasm"]
+  -p <str> --feature_regex=<str>    Regular expression to extract features from column names. [default: ^Nuclei_|^Cells_|^Cytoplasm]
   -o <file> --output=<file>         GCT file.' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
