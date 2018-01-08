@@ -41,7 +41,7 @@ aggregate_objects <- function(compartment) {
     population = object,
     variables = variables,
     strata = c("Metadata_Plate", "Metadata_Well"),
-    operation = "median"
+    operation = "mean"
   ) %>% collect()
 
 }
