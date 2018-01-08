@@ -59,9 +59,9 @@ if(sample_single_cell) {
   metadata <- copy_to(db, metadata)
 
   image <- tbl(src = db, "image") %>%
-    select(TableNumber, ImageNumber, Image_Metadata_Plate, Image_Metadata_Well) %>%
-    rename(Metadata_Plate = Image_Metadata_Plate) %>%
-    rename(Metadata_Well = Image_Metadata_Well) %>%
+    select(TableNumber, ImageNumber, Metadata_Plate, Metadata_Well) %>%
+    rename(Metadata_Plate = Metadata_Plate) %>%
+    rename(Metadata_Well = Metadata_Well) %>%
     inner_join(metadata, by = c("Metadata_Plate", "Metadata_Well"))
 
 }

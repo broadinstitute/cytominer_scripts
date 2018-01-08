@@ -43,8 +43,6 @@ backend_dir <- paste("../..", "backend", batch_id, plate_id, sep = "/")
 
 profiles <- suppressMessages(readr::read_csv(paste(backend_dir, paste0(plate_id, ".csv"), sep = "/")))
 
-profiles %<>% setNames(names(profiles) %>% stringr::str_replace_all("^Image_Metadata", "Metadata"))
-
 # read and join metadata map
 
 metadata_map <- suppressMessages(readr::read_csv(paste(metadata_dir, "barcode_platemap.csv", sep = "/"),

@@ -9,7 +9,7 @@ Options:
   -b <id> --batch_id=<id>             Batch ID.
   -c <file> --config=<file>           Config file specifying how to collate.
   -p <id> --plate_id=<id>             Plate ID.
-  -l <str> --column_as_plate=<str>    Column name in CSV file that should be mapped to Image_Metadata_Plate.
+  -l <str> --column_as_plate=<str>    Column name in CSV file that should be mapped to Metadata_Plate.
   -m --munge                          Split object CSV into separate CSVs per compartment.
   -n <str> --pipeline_name=<str>      Name of pipeline that produced the output CSVs [default: analysis].
   -t <dir> --tmpdir=<dir>             Temporary directory [default: /tmp].
@@ -77,7 +77,7 @@ if (file.exists(backend_file) & file.exists(aggregated_file)) {
 }
 
 if (!file.exists(cache_backend_file) | overwrite_backend_cache) {
-  ingest_cmd <- paste("ingest", input_dir, "-o", paste0("sqlite:///", cache_backend_file),
+  ingest_cmd <- paste("cytominer-database", "ingest", input_dir, paste0("sqlite:///", cache_backend_file),
       "-c", config, ifelse(munge, "--munge", "--no-munge"))
 
   if (file.exists(cache_backend_file)) {
@@ -92,13 +92,13 @@ if (!file.exists(cache_backend_file) | overwrite_backend_cache) {
 
   stopifnot(file.exists(cache_backend_file))
 
-  # add a column `Image_Metadata_Plate` if specified
+  # add a column `Metadata_Plate` if specified
   # TODO: Generalize this so that new_name:old_name pairs can be specified for any column
 
   if(!is.null(column_as_plate)) {
-    system(paste("sqlite3", cache_backend_file, "'ALTER TABLE Image ADD COLUMN Image_Metadata_Plate TEXT;'"))
+    system(paste("sqlite3", cache_backend_file, "'ALTER TABLE Image ADD COLUMN Metadata_Plate TEXT;'"))
 
-    system(paste("sqlite3", cache_backend_file, "'UPDATE image SET Image_Metadata_Plate =", column_as_plate, ";'"))
+    system(paste("sqlite3", cache_backend_file, "'UPDATE image SET Metadata_Plate =", column_as_plate, ";'"))
 
   }
 
