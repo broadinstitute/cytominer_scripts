@@ -24,7 +24,7 @@ db <- src_sqlite(path = opts[["sqlite_file"]])
 stats <- tbl(src = db, "image") %>%
   select(Metadata_Plate, Metadata_Well, Count_Cells) %>%
   group_by(Metadata_Plate, Metadata_Well) %>%
-  summarize(Image_Count_Cells = sum(Count_Cells)) %>%
+  summarize(Count_Cells = sum(Count_Cells)) %>%
   collect()
 
 futile.logger::flog.info(paste0("Writing stats to ", opts[["output"]]))
