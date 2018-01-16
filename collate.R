@@ -71,7 +71,7 @@ if (download) {
 
   futile.logger::flog.info("Downloading CSVs...")
 
-  stopifnot(system(sync_str) != 0)
+  stopifnot(system(sync_str) == 0)
 
 } else {
   stopifnot(dir.exists(input_dir))
@@ -176,13 +176,13 @@ if (download) {
 
   futile.logger::flog.info("Uploading backend_file ...")
 
-  stopifnot(system(sync_str) != 0)
+  stopifnot(system(sync_str) == 0)
 
   sync_str <- paste("aws s3 sync", cache_aggregated_file, remote_aggregated_file, sep = " ")
 
   futile.logger::flog.info("Uploading aggregated_file ...")
 
-  stopifnot(system(sync_str) != 0)
+  stopifnot(system(sync_str) == 0)
 
   futile.logger::flog.info("Deleting cache_backend_file ...")
 
