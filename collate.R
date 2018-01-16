@@ -172,13 +172,13 @@ if (download) {
 
   remote_aggregated_file <- file.path(remote_backend_dir, paste0(plate_id, ".csv"))
 
-  sync_str <- paste("aws s3 sync", cache_backend_file, remote_backend_file, sep = " ")
+  sync_str <- paste("aws s3 cp", cache_backend_file, remote_backend_file, sep = " ")
 
   futile.logger::flog.info("Uploading backend_file ...")
 
   stopifnot(system(sync_str) == 0)
 
-  sync_str <- paste("aws s3 sync", cache_aggregated_file, remote_aggregated_file, sep = " ")
+  sync_str <- paste("aws s3 cp", cache_aggregated_file, remote_aggregated_file, sep = " ")
 
   futile.logger::flog.info("Uploading aggregated_file ...")
 
