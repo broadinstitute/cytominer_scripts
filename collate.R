@@ -26,9 +26,9 @@ suppressWarnings(suppressMessages(library(magrittr)))
 
 suppressWarnings(suppressMessages(library(stringr)))
 
-str <- "-b 2017_12_05_Batch2 -p BR00092655 -c ingest_config.ini -d -r s3://imaging-platform/projects/2015_10_05_DrugRepurposing_AravindSubramanian_GolubLab_Broad/workspace"
+#str <- "-b 2017_12_05_Batch2 -p BR00092655 -c ingest_config.ini -d -r s3://imaging-platform/projects/2015_10_05_DrugRepurposing_AravindSubramanian_GolubLab_Broad/workspace"
 
-opts <- docopt(doc, str)
+#opts <- docopt(doc, str)
 
 opts <- docopt(doc)
 
