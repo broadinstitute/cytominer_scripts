@@ -24,21 +24,15 @@ suppressWarnings(suppressMessages(library(readr)))
 opts <- docopt(doc)
 
 batch_id <- opts[["batch_id"]]
-
 external_metadata <- opts[["external_metadata"]]
-
 cell_id <- opts[["cell_id"]]
-
 format_broad_cmap <- opts[["format_broad_cmap"]]
-
 plate_id <- opts[["plate_id"]]
-
 perturbation_mode <- opts[["perturbation_mode"]]
-
 metadata_dir <- paste("../..", "metadata", batch_id, sep = "/")
+backend_dir <- paste("../..", "backend", batch_id, unlist(strsplit(plate_id, "_"))[1], sep = "/")
 
-backend_dir <- paste("../..", "backend", batch_id, plate_id, sep = "/")
-
+print(backend_dir)
 # read profiles and rename column names
 
 profiles <- suppressMessages(readr::read_csv(paste(backend_dir, paste0(plate_id, ".csv"), sep = "/")))

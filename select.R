@@ -37,8 +37,7 @@ variables_selected <-
     Reduce(function(df1, df2) dplyr::inner_join(df1, df2, by ="variable"), .) %>%
     magrittr::extract2("variable")
 
-backend_dir <- paste("../..", "backend", batch_id, plate_id, sep = "/")
-
+backend_dir <- paste("../..", "backend", batch_id, unlist(strsplit(plate_id, "_"))[1], sep = "/")
 profiles <- paste(backend_dir, paste0(plate_id, "_normalized.csv"), sep = "/")
 
 profiles_variable_selected <- paste(backend_dir, paste0(plate_id, "_normalized_variable_selected.csv"), sep = "/")

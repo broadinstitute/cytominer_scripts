@@ -15,26 +15,19 @@ Options:
   -t <dir> --tmpdir=<dir>       Temporary directory [default: /tmp]' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
-
 suppressWarnings(suppressMessages(library(dplyr)))
-
 suppressWarnings(suppressMessages(library(magrittr)))
-
 suppressWarnings(suppressMessages(library(stringr)))
 
 opts <- docopt(doc)
 
 batch_id <- opts[["batch_id"]]
-
 sample_single_cell <- opts[["sample_single_cell"]]
-
 plate_id <- opts[["plate_id"]]
-
 operation <- opts[["operation"]]
-
 subset <- opts[["subset"]] # e.g. "Metadata_broad_sample_type == '''control'''"
 
-backend_dir <- paste("../..", "backend", batch_id, plate_id, sep = "/")
+backend_dir <- paste("../..", "backend", batch_id, unlist(strsplit(plate_id, "_"))[1], sep = "/")
 
 # load profiles
 profiles <- suppressMessages(readr::read_csv(paste(backend_dir, paste0(plate_id, "_augmented.csv"), sep = "/")))

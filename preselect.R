@@ -98,7 +98,9 @@ for (operation in operations) {
         # This is handled differently because there is no direct way yet to do filtering in cytominer
         # TODO: rewrite this after cytominer has an appropriate filtering function for this
         testthat::expect_false(is.null(replicates), info="replicates should be specified when performing replicate_correlation")
-
+	
+	head(df)
+	print(variables)
         feature_replicate_correlations <-
           df %>%
           cytominer::replicate_correlation(
