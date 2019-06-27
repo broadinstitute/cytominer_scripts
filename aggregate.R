@@ -32,7 +32,17 @@ db <- src_sqlite(path = sql_file)
 image <- tbl(src = db, "image") %>%
   select(TableNumber, ImageNumber, Metadata_Plate, Metadata_Well)
 
-aggregate_objects <- function(compartment, sc_type = "none") {
+# If sc_type is specified, group by different columns
+if (sc_type == "none") {
+  strata_cols <- c("Metadata_Plate", "Metadata_Well")
+} else {
+  strata_cols <- c("TableNumber", "ImageNumber", "ObjectNumber", "Metadata_Plate",
+                   "Metadata_Well")
+}
+
+aggregate_objects <- function(compartment,
+                              strata_cols = c("Metadata_Plate", "Metadata_Well"),
+                              sc_type = "none") {
   object <- tbl(src = db, compartment)
 
   object %<>% inner_join(image, by = c("TableNumber", "ImageNumber"))
@@ -50,36 +60,43 @@ aggregate_objects <- function(compartment, sc_type = "none") {
   variables <- colnames(object) %>% stringr::str_subset(compartment_tag)
   futile.logger::flog.info(str_c("Started aggregating ", compartment))
 
-  object <- object %>%
-    dplyr::as_tibble() %>%
-    dplyr::group_by_(.dots = c("TableNumber", "ImageNumber",
-                               "ObjectNumber", "Metadata_Plate",
-                               "Metadata_Well")) %>%
-    dplyr::summarise_at(.funs = 'mean', .vars = variables) %>%
-    dplyr::ungroup()
+  cytominer::aggregate(
+    population = object,
+    variables = variables,
+    strata = strata_cols,
+    operation = "mean"
+  ) %>% collect()
 
-  return(object)
 }
 
-aggregate_cols <- c("TableNumber", "ImageNumber", "ObjectNumber",
-                    "Metadata_Plate", "Metadata_Well")
-sc_objects <-
-  aggregate_objects("cells",
+aggregated <-
+  aggregate_objects(compartment = "cells",
+                    strata_cols = strata_cols,
                     sc_type = sc_type) %>%
-  inner_join(aggregate_objects("cytoplasm"),
-             by = aggregate_cols) %>%
-  inner_join(aggregate_objects("nuclei"),
-             by = aggregate_cols)
+  inner_join(
+    aggregate_objects(compartment = "cytoplasm",
+                      strata_cols = strata_cols,
+                      sc_type = sc_type),
+            by = strata_cols
+          ) %>%
+  inner_join(
+    aggregate_objects(compartment = "nuclei",
+                      strata_cols = strata_cols,
+                      sc_type = sc_type),
+             by = strata_cols
+           )
 
-futile.logger::flog.info(paste0("Now collapsing by well for ", output_file))
+if (sc_type != "none") {
+  futile.logger::flog.info(
+    paste0("Now collapsing single cell by well for ", output_file)
+  )
 
-variables <- colnames(sc_objects) %>% stringr::str_subset("^Cells|^Nuclei|^Cytoplasm")
-
-sc_objects <- sc_objects %>%
-  dplyr::group_by_(.dots = c("Metadata_Plate", "Metadata_Well")) %>%
-  dplyr::summarize_at(.funs = 'mean', .vars = variables) %>%
-  dplyr::ungroup()
+  aggregated <- aggregated %>%
+    dplyr::group_by_(.dots = c("Metadata_Plate", "Metadata_Well")) %>%
+    dplyr::summarize_at(.funs = 'mean', .vars = variables) %>%
+    dplyr::ungroup()
+}
 
 futile.logger::flog.info(paste0("Writing aggregated to ", output_file))
 
-sc_objects %>% readr::write_csv(output_file)
+aggregated %>% readr::write_csv(output_file)
