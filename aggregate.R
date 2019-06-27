@@ -12,14 +12,19 @@ Options:
   -t <sc_type> --sc_type=<sc_type>                which sc_type to focus on [default: none]' -> doc
 
 suppressWarnings(suppressMessages(library(docopt)))
+
 suppressWarnings(suppressMessages(library(dplyr)))
+
 suppressWarnings(suppressMessages(library(magrittr)))
+
 suppressWarnings(suppressMessages(library(stringr)))
 
 opts <- docopt(doc)
 
 sql_file <- opts[["sqlite_file"]]
+
 output_file <- opts[["output"]]
+
 sc_type <- opts[["sc_type"]]
 
 db <- src_sqlite(path = sql_file)
@@ -47,7 +52,7 @@ aggregate_objects <- function(compartment, sc_type = "none") {
 
   object <- object %>%
     dplyr::as_tibble() %>%
-    dplyr::group_by_(.dots = c("TableNumber", "ImageNumber", 
+    dplyr::group_by_(.dots = c("TableNumber", "ImageNumber",
                                "ObjectNumber", "Metadata_Plate",
                                "Metadata_Well")) %>%
     dplyr::summarise_at(.funs = 'mean', .vars = variables) %>%
