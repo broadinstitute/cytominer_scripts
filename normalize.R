@@ -103,7 +103,7 @@ normalize_profiles <- function(compartment) {
 
   normalized <-
     cytominer::normalize(
-      population = load_profiles(compartment = compartment),
+      population = load_profiles(compartment = compartment) %>% mutate_at(variables, as.double),
       variables = variables,
       strata =  c("Metadata_Plate"),
       sample = sample,
